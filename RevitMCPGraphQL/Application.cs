@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace RevitMCPGraphQL;
 
-public class GraphQLRevitAddIn : IExternalApplication
+public class GraphQlRevitAddIn : IExternalApplication
 {
-    public static IWebHost _host;
+    public static IWebHost Host;
     public Result OnStartup(UIControlledApplication application)
     {
         // Resolve load Assembly path
@@ -17,7 +17,7 @@ public class GraphQLRevitAddIn : IExternalApplication
 
     public Result OnShutdown(UIControlledApplication application)
     {
-        _host?.StopAsync().Wait();
+        Host?.StopAsync().Wait();
         return Result.Succeeded;
     }
     private static readonly string AssemblyLocation  = Assembly.GetExecutingAssembly().Location;
