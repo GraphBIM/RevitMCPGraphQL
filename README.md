@@ -2,6 +2,8 @@
 
 A Revit add-in that exposes a GraphQL API for querying Revit data. Built with .NET 8 and ASP.NET Core, this project allows you to interact with Autodesk Revit models using GraphQL queries or from Python.
 
+![](./docs/Code_jYTcsr1iMW.png)
+
 ## Features
 - Host a GraphQL server inside Revit
 - Query Revit elements, categories, and parameters
