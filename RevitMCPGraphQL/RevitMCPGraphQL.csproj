@@ -66,7 +66,6 @@
         <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitVersion).*"/>
         <!-- MVVM -->
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
-        <PackageReference Include="Revit.Async" Version="2.1.1" />
     </ItemGroup>
 
     <ItemGroup>
