@@ -1,0 +1,344 @@
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using Autodesk.Revit.Attributes;
+using Autodesk.Revit.UI;
+using GraphQL;
+using GraphQL.Types;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Revit.Async;
+
+namespace RevitMCPGraphQL;
+
+[Transaction(TransactionMode.Manual)]
+public class Command : IExternalCommand
+{
+    private string? _httpUrl;
+    public static Document? _doc;
+
+    // HttpListener server state
+    private static HttpListener? _listener;
+    private static CancellationTokenSource? _cts;
+
+    public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
+    {
+        try
+        {
+            _doc = commandData.Application.ActiveUIDocument?.Document;
+            if (_doc == null)
+            {
+                TaskDialog.Show("Error", "No active document found.");
+                return Result.Failed;
+            }
+
+            int port = GetAvailablePort(5000, 6000);
+            _httpUrl = $"http://localhost:{port}/graphql";
+
+            // Start server on a background thread (no RevitTask here)
+            Task.Run(() => StartGraphQlServer(port));
+            TaskDialog.Show("GraphQL Server", $"Server starting on {_httpUrl}. Use HTTP POST to this URL. Health: http://localhost:{port}/");
+        }
+        catch (Exception e)
+        {
+            message = $"Error starting GraphQL server: {e.Message}";
+            TaskDialog.Show("Error", message);
+            return Result.Failed;
+        }
+
+        return Result.Succeeded;
+    }
+
+    public static void StopServer()
+    {
+        try
+        {
+            _cts?.Cancel();
+            if (_listener != null && _listener.IsListening)
+            {
+                _listener.Stop();
+                _listener.Close();
+            }
+        }
+        catch { }
+        finally
+        {
+            _listener = null;
+            _cts = null;
+        }
+    }
+
+    private async Task StartGraphQlServer(int port)
+    {
+        _cts = new CancellationTokenSource();
+        var token = _cts.Token;
+
+        _listener = new HttpListener();
+        _listener.Prefixes.Add($"http://localhost:{port}/");
+        _listener.Prefixes.Add($"http://127.0.0.1:{port}/");
+
+        try
+        {
+            _listener.Start();
+        }
+        catch (HttpListenerException ex)
+        {
+            TaskDialog.Show("GraphQL Server Error", $"Failed to bind HttpListener on port {port}: {ex.Message}");
+            return;
+        }
+
+        var schema = new Schema { Query = new RevitQueryProvider(() => _doc).GetQuery() };
+        var executer = new DocumentExecuter();
+
+        while (!token.IsCancellationRequested)
+        {
+            HttpListenerContext? ctx = null;
+            try
+            {
+                ctx = await _listener.GetContextAsync();
+            }
+            catch (ObjectDisposedException)
+            {
+                break; // listener stopped
+            }
+            catch (Exception)
+            {
+                if (token.IsCancellationRequested) break;
+                continue;
+            }
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await HandleRequestAsync(ctx, schema, executer);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        ctx.Response.StatusCode = 500;
+                        var payload = JsonConvert.SerializeObject(new { errors = new[] { new { message = ex.Message } } });
+                        var bytes = Encoding.UTF8.GetBytes(payload);
+                        ctx.Response.ContentType = "application/json";
+                        await ctx.Response.OutputStream.WriteAsync(bytes, 0, bytes.Length, token);
+                    }
+                    catch { }
+                    finally
+                    {
+                        try { ctx.Response.OutputStream.Close(); } catch { }
+                    }
+                }
+            }, token);
+        }
+    }
+
+    private static async Task HandleRequestAsync(HttpListenerContext ctx, ISchema schema, IDocumentExecuter executer)
+    {
+        var req = ctx.Request;
+        var res = ctx.Response;
+
+        // Health endpoint
+        if (req.HttpMethod == "GET" && (req.Url?.AbsolutePath == "/" || req.Url?.AbsolutePath == "/health"))
+        {
+            var msg = "Revit GraphQL server is running. POST GraphQL to /graphql";
+            var bytes = Encoding.UTF8.GetBytes(msg);
+            res.ContentType = "text/plain";
+            await res.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+            res.OutputStream.Close();
+            return;
+        }
+
+        if (req.Url?.AbsolutePath != "/graphql")
+        {
+            res.StatusCode = 404;
+            res.OutputStream.Close();
+            return;
+        }
+
+        if (req.HttpMethod == "GET")
+        {
+            var msg = "GraphQL endpoint. Send HTTP POST with JSON body: { query: " + '"' + "..." + '"' + " }";
+            var bytes = Encoding.UTF8.GetBytes(msg);
+            res.ContentType = "text/plain";
+            await res.OutputStream.WriteAsync(bytes, 0, bytes.Length);
+            res.OutputStream.Close();
+            return;
+        }
+
+        if (req.HttpMethod != "POST")
+        {
+            res.StatusCode = 405;
+            res.OutputStream.Close();
+            return;
+        }
+
+        using var reader = new StreamReader(req.InputStream, req.ContentEncoding);
+        var body = await reader.ReadToEndAsync();
+        var request = JsonConvert.DeserializeObject<GraphQLHttpRequest>(body) ?? new GraphQLHttpRequest();
+
+        var result = await executer.ExecuteAsync(options =>
+        {
+            options.Schema = schema;
+            options.Query = request.Query ?? string.Empty;
+        });
+
+        var json = JsonConvert.SerializeObject(result);
+        var outBytes = Encoding.UTF8.GetBytes(json);
+        res.ContentType = "application/json";
+        await res.OutputStream.WriteAsync(outBytes, 0, outBytes.Length);
+        res.OutputStream.Close();
+    }
+
+    private int GetAvailablePort(int start, int end)
+    {
+        for (int p = start; p <= end; p++)
+        {
+            var listener = new TcpListener(IPAddress.Loopback, p);
+            try
+            {
+                listener.Start();
+                return p;
+            }
+            catch
+            {
+                // Port is in use, try next
+            }
+            finally
+            {
+                listener.Stop();
+            }
+        }
+
+        throw new Exception("No available port found.");
+    }
+}
+
+internal class GraphQLHttpRequest
+{
+    public string? Query { get; set; }
+    public JObject? Variables { get; set; }
+}
+
+// Provides async, Revit-safe resolvers via Revit.Async
+internal class RevitQueryProvider
+{
+    private readonly Func<Document?> _getDoc;
+    public RevitQueryProvider(Func<Document?> getDoc) { _getDoc = getDoc; }
+
+    public ObjectGraphType GetQuery()
+    {
+        var query = new ObjectGraphType();
+
+        query.Field<ListGraphType<CategoryType>>("categories").ResolveAsync(async context =>
+        {
+            return await RevitTask.RunAsync(() =>
+            {
+                var doc = _getDoc();
+                if (doc == null) return new List<CategoryDto>();
+                return doc.Settings.Categories.Cast<Category>()
+                    .Where(c => c != null && !string.IsNullOrEmpty(c.Name))
+                    .Select(c => new CategoryDto { Name = c.Name, Id = c.Id?.IntegerValue ?? 0 })
+                    .ToList();
+            });
+        });
+
+        query.Field<ListGraphType<ElementType>>("elements")
+            .Arguments(new QueryArguments(new QueryArgument<StringGraphType> { Name = "categoryName" }))
+            .ResolveAsync(async context =>
+            {
+                var categoryName = context.GetArgument<string>("categoryName");
+                return await RevitTask.RunAsync(() =>
+                {
+                    var doc = _getDoc();
+                    if (doc == null) return new List<ElementDto>();
+                    var collector = new FilteredElementCollector(doc).WhereElementIsNotElementType();
+                    if (!string.IsNullOrEmpty(categoryName))
+                    {
+                        var category = doc.Settings.Categories
+                            .Cast<Category>()
+                            .FirstOrDefault(c => c.Name == categoryName);
+                        if (category != null)
+                        {
+                            try { collector = collector.OfCategory((BuiltInCategory)category.Id.IntegerValue); } catch { }
+                        }
+                    }
+                    return collector.ToElements()
+                        .Cast<Element>()
+                        .Select(e => new ElementDto { Id = e.Id?.IntegerValue ?? 0, Name = e.Name })
+                        .ToList();
+                });
+            });
+
+        query.Field<ListGraphType<RoomType>>("rooms").ResolveAsync(async context =>
+        {
+            return await RevitTask.RunAsync(() =>
+            {
+                var doc = _getDoc();
+                if (doc == null) return new List<RoomDto>();
+                return new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_Rooms)
+                    .WhereElementIsNotElementType()
+                    .ToElements()
+                    .Cast<SpatialElement>()
+                    .Select(r => new RoomDto {
+                        Id = r.Id?.IntegerValue ?? 0,
+                        Name = r.Name,
+                        Number = r.Number,
+                        Area = r.Area
+                    })
+                    .ToList();
+            });
+        });
+
+        return query;
+    }
+}
+
+// DTOs to avoid exposing Revit types directly
+public sealed class CategoryDto { public string Name { get; set; } = string.Empty; public int Id { get; set; } }
+
+public sealed class ElementDto { public int Id { get; set; } public string? Name { get; set; } }
+
+public sealed class RoomDto { public int Id { get; set; } public string? Name { get; set; } public string? Number { get; set; } public double Area { get; set; } }
+
+// GraphQL types over DTOs (no ElementId leakage)
+public class CategoryType : ObjectGraphType<CategoryDto>
+{
+    public CategoryType()
+    {
+        Field(x => x.Name).Description("Category name");
+        Field(x => x.Id).Description("Category ID");
+    }
+}
+
+public class ElementType : ObjectGraphType<ElementDto>
+{
+    public ElementType()
+    {
+        Field(x => x.Id).Description("Element ID");
+        Field(x => x.Name, nullable: true).Description("Element name");
+    }
+}
+
+public class RoomType : ObjectGraphType<RoomDto>
+{
+    public RoomType()
+    {
+        Field(x => x.Id).Description("Room ID");
+        Field(x => x.Name, nullable: true).Description("Room name");
+        Field(x => x.Number, nullable: true).Description("Room number");
+        Field(x => x.Area).Description("Room area");
+    }
+}
+
+// ParameterType can remain as-is or be removed if not exposed in queries
+public class ParameterType : ObjectGraphType<Parameter>
+{
+    public ParameterType()
+    {
+        Field<StringGraphType>("name", resolve: context => context.Source.Definition.Name);
+        Field<StringGraphType>("value", resolve: context => context.Source.AsValueString());
+    }
+}

@@ -1,0 +1,37 @@
+bin/
+obj/
+*.user
+*.suo
+*.DotSettings.user
+*.vs/
+
+# Rider/VSCode/Visual Studio
+.idea/
+.vscode/
+*.sln.docstates
+
+# Revit Add-in deployment
+AddIn*/
+
+# Logs
+*.log
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Publish output
+publish/
+
+# NuGet
+*.nupkg
+.nuget/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Others
+_ReSharper*/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/

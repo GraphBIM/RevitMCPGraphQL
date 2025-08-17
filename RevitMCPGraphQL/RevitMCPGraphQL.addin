@@ -1,0 +1,15 @@
+﻿<RevitAddIns>
+    <AddIn Type="Command">
+        <Name>RevitMCPGraphQL</Name>
+        <Assembly>RevitMCPGraphQL\RevitMCPGraphQL.dll</Assembly>
+        <AddInId>7FB379E7-052C-41FF-BC42-7DEBE94D73A0</AddInId>
+        <FullClassName>RevitMCPGraphQL.Command</FullClassName>
+        <VendorId>Development</VendorId>
+        <VendorDescription></VendorDescription>
+        <VendorEmail></VendorEmail>
+    </AddIn>
+    <ManifestSettings>
+        <UseRevitContext>False</UseRevitContext>
+        <ContextName>RevitMCPGraphQL</ContextName>
+    </ManifestSettings>
+</RevitAddIns>
