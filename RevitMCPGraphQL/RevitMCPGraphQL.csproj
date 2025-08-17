@@ -53,6 +53,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="GraphQL.NewtonsoftJson" Version="8.5.0" />
         <PackageReference Include="GraphQL.Server.All" Version="8.3.0" />
         <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="8.0.0" Condition=" '$(TargetFramework)' == 'net8.0-windows' "/>

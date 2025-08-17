@@ -6,9 +6,11 @@ using System.Text;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using GraphQL;
+using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using JsonSerializerSettings = GraphQL.NewtonsoftJson.JsonSerializerSettings;
 
 namespace RevitMCPGraphQL;
 
@@ -184,7 +186,15 @@ public class Command : IExternalCommand
             options.Query = request.Query ?? string.Empty;
         }).GetAwaiter().GetResult();
 
-        var json = JsonConvert.SerializeObject(result);
+        // Serialize ExecutionResult using Newtonsoft with GraphQL converter to avoid reference loops
+        var jsonSettings = new JsonSerializerSettings
+        {
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            NullValueHandling = NullValueHandling.Include,
+            Formatting = Formatting.None
+        };
+        jsonSettings.Converters.Add(new ExecutionResultJsonConverter());
+        var json = JsonConvert.SerializeObject(result, jsonSettings);
         var outBytes = Encoding.UTF8.GetBytes(json);
         res.ContentType = "application/json";
         res.OutputStream.Write(outBytes, 0, outBytes.Length);
