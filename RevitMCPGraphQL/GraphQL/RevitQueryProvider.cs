@@ -56,7 +56,10 @@ internal class RevitQueryProvider
                         .WhereElementIsNotElementType()
                         .Select(e => e.Category)
                         .Where(c => c != null)
-                        .Distinct()
+                        //Distinct by id 
+                        .GroupBy(c => c.Id)
+                        .Select(g => g.First())
+                        .Where(c => c != null)
                         .Select(c =>
                         {
                             string? bicName = null;

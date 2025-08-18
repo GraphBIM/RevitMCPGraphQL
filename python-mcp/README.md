@@ -22,15 +22,19 @@ python-mcp\run_revit_mcp_server.bat
 It auto-installs dependencies then launches the server.
 
 ## VS Code / MCP Client Integration
-If your MCP client expects an executable path, point it to:
+Preferred (simplest) executable path on Windows:
 ```
-python
+${workspaceFolder}/python-mcp/revit_mcp_server.cmd
 ```
-with args:
+This wrapper installs dependencies (idempotent) and launches the stdio MCP server.
+
+Alternative (explicit python):
 ```
-path\to\revit_mcp_server.py
+command: python
+args: ["${workspaceFolder}/python-mcp/revit_mcp_server.py"]
+cwd: ${workspaceFolder}/python-mcp
 ```
-Or directly to the batch file.
+Ensure you do NOT set the command to just `revit_mcp_server.py` on Windows; that triggers a "program not found" spawn error because `.py` isn’t directly executable by all hosts.
 
 ## Tools Exposed
 - health
@@ -42,6 +46,8 @@ Or directly to the batch file.
 - server_info
 
 ## Troubleshooting
-- Error `program not found`: Ensure the launcher references `python` plus the script, not just the script name (Windows does not treat `.py` as executable in all contexts).
-- Error `fastmcp package not installed`: Run `pip install -r requirements.txt`.
-- Network errors: Verify the Revit add-in GraphQL server is running and reachable at `REVIT_GRAPHQL_URL`.
+- Error `program not found` (or exit code 2): Point your MCP client to `revit_mcp_server.cmd` (recommended) or use `python revit_mcp_server.py`. Avoid specifying only the `.py` filename as the command on Windows.
+- Error `fastmcp package not installed`: Dependencies failed to install. Re-run `python -m pip install -r requirements.txt` (check proxy / SSL if it persists).
+- Network errors: Verify the Revit add-in GraphQL server is running and reachable at `REVIT_GRAPHQL_URL` (try opening it in a browser or `Invoke-WebRequest`).
+- Hanging / no responses: Confirm the client uses stdio transport (no TCP by default). Use the `server_info` tool to inspect configuration.
+- Need verbose HTTP diagnostics: Temporarily set the env var `REVIT_MCP_DEBUG=1` (then add prints or logging inside `_post`).

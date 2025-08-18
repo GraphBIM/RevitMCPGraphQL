@@ -39,10 +39,10 @@ A Revit add-in that exposes a GraphQL API for querying Revit data. Built with .N
 - Health check: open [http://localhost:5000/health](http://localhost:5000/health) in your browser or use a GET request.
 - Use the `/graphql` endpoint for queries from any GraphQL client or from Python.
 
-## Python Client
-A ready-to-use Python client is provided in `python-mcp/mcp_client.py`.
+## Python + MCP
+A ready-to-use Python client is provided in `python-mcp/mcp_client.py` and an MCP stdio server wrapper in `python-mcp/revit_mcp_server.py`.
 
-### Example usage:
+### Example client usage:
 ```sh
 cd python-mcp
 pip install requests
@@ -51,6 +51,44 @@ python mcp_client.py
 This will print the results of health, categories, elements, and rooms queries.
 
 You can also import and use `MCPClient` in your own Python scripts.
+
+### Launch the MCP server (for AI / tool integrations)
+Simplest on Windows:
+```powershell
+python-mcp\revit_mcp_server.cmd
+```
+Or explicitly:
+```powershell
+cd python-mcp
+python -m pip install -r requirements.txt
+python revit_mcp_server.py
+```
+
+In a VS Code MCP-capable client configuration (settings.json):
+```jsonc
+{
+   "mcp.servers": {
+      "revit-mcp-vscode-graphql": {
+         "command": "${workspaceFolder}/python-mcp/revit_mcp_server.cmd",
+         "cwd": "${workspaceFolder}/python-mcp",
+         "env": {
+            "REVIT_GRAPHQL_URL": "http://localhost:5000/graphql"
+         }
+      }
+   }
+}
+```
+
+If you prefer not to use the wrapper:
+```jsonc
+{
+   "command": "python",
+   "args": ["${workspaceFolder}/python-mcp/revit_mcp_server.py"],
+   "cwd": "${workspaceFolder}/python-mcp"
+}
+```
+
+Avoid setting the command directly to `revit_mcp_server.py` on Windows (will cause "program not found").
 
 ## Project Structure
 - `RevitMCPGraphQL/` - Main add-in source code
