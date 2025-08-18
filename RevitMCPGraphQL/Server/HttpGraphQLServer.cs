@@ -5,6 +5,7 @@ using GraphQL;
 using GraphQL.NewtonsoftJson;
 using GraphQL.Types;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RevitMCPGraphQL.GraphQL;
 
 namespace RevitMCPGraphQL.Server;
@@ -37,7 +38,9 @@ public sealed class HttpGraphQlServer
                 _listener.Close();
             }
         }
-        catch { }
+        catch
+        {
+        }
         finally
         {
             _listener = null;
@@ -63,7 +66,11 @@ public sealed class HttpGraphQlServer
             return;
         }
 
-        var schema = new Schema { Query = new RevitQueryProvider(_getDoc).GetQuery() };
+        var schema = new Schema
+        {
+            Query = new RevitQueryProvider(_getDoc).GetQuery(),
+            Mutation = new RevitExecuteProvider(_getDoc)
+        };
         var executer = new DocumentExecuter();
 
         while (!token.IsCancellationRequested)
@@ -89,7 +96,14 @@ public sealed class HttpGraphQlServer
             }
             catch
             {
-                try { ctx.Response.StatusCode = 500; ctx.Response.OutputStream.Close(); } catch { }
+                try
+                {
+                    ctx.Response.StatusCode = 500;
+                    ctx.Response.OutputStream.Close();
+                }
+                catch
+                {
+                }
             }
         }
     }
@@ -137,11 +151,16 @@ public sealed class HttpGraphQlServer
         using var reader = new StreamReader(req.InputStream, req.ContentEncoding);
         var body = reader.ReadToEnd();
         var request = JsonConvert.DeserializeObject<GraphQlHttpRequest>(body) ?? new GraphQlHttpRequest();
-
+        Dictionary<string, object?>? dictionary = request.Variables!.ToObject<Dictionary<string, object?>>();
         var result = executer.ExecuteAsync(options =>
         {
             options.Schema = schema;
             options.Query = request.Query ?? string.Empty;
+            if (request.Variables != null)
+            {
+                var native = (Dictionary<string, object?>)ToNative(request.Variables)!;
+                options.Variables = new Inputs(native);
+            }
         }).GetAwaiter().GetResult();
 
         var jsonSettings = new Newtonsoft.Json.JsonSerializerSettings
@@ -156,5 +175,20 @@ public sealed class HttpGraphQlServer
         res.ContentType = "application/json";
         res.OutputStream.Write(outBytes, 0, outBytes.Length);
         res.OutputStream.Close();
+    }
+    private static object? ToNative(JToken token)
+    {
+        return token.Type switch
+        {
+            JTokenType.Object => token.Children<JProperty>()
+                .ToDictionary(p => p.Name, p => ToNative(p.Value), StringComparer.Ordinal),
+            JTokenType.Array => token.Children().Select(ToNative).ToList(),
+            JTokenType.Integer => (long)token,
+            JTokenType.Float => (double)token,
+            JTokenType.Boolean => (bool)token,
+            JTokenType.Null => null,
+            JTokenType.String => (string)token,
+            _ => ((JValue)token).Value
+        };
     }
 }

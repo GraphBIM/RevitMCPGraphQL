@@ -41,9 +41,34 @@ class MCPClient:
         """
         return self.run_query(query)
 
+    def set_element_parameters_batch(self, inputs):
+        # inputs: list of dicts, each dict: {"elementId": <id>, "parameters": [{"parameterName": <name>, "value": <value>}, ...]}
+        mutation = '''
+        mutation setElementParametersBatch($inputs: [ElementParametersInput!]!) {
+            setElementParametersBatch(inputs: $inputs)
+        }
+        '''
+        variables = {"inputs": inputs}
+        response = requests.post(self.url, json={"query": mutation, "variables": variables})
+        try:
+            return response.json()
+        except Exception as e:
+            return {"error": str(e), "raw": response.text}
+
 if __name__ == "__main__":
     client = MCPClient()
     print("Health:", json.dumps(client.health(), indent=2))
     print("Categories:", json.dumps(client.categories(), indent=2))
     print("Elements (Walls):", json.dumps(client.elements("Walls"), indent=2))
     print("Rooms:", json.dumps(client.rooms(), indent=2))
+    # Example: Batch set parameters for two elements
+    batch_inputs = [
+        {
+            "elementId": 349315,  # Use a real element id from your model
+            "parameters": [
+                {"parameterName": "Mark", "value": "5555"},
+                {"parameterName": "Width", "value": "1500"}
+            ]
+        }
+    ]
+    print("Batch Set Parameters:", json.dumps(client.set_element_parameters_batch(batch_inputs), indent=2))
