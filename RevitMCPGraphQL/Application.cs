@@ -7,7 +7,7 @@ namespace RevitMCPGraphQL;
 
 public class GraphQlRevitAddIn : IExternalApplication
 {
-    public static IWebHost Host;
+    public static IWebHost? Host;
     public Result OnStartup(UIControlledApplication application)
     {
         // Resolve load Assembly path

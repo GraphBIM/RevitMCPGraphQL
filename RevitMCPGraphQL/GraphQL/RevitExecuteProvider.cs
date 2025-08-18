@@ -1,7 +1,5 @@
-using Autodesk.Revit.DB;
 using GraphQL;
 using GraphQL.Types;
-using System.Collections.Generic;
 
 namespace RevitMCPGraphQL.GraphQL
 {
@@ -54,7 +52,7 @@ namespace RevitMCPGraphQL.GraphQL
                                 foreach (var paramObj in paramList)
                                 {
                                     var paramDict = paramObj as Dictionary<string, object>;
-                                    var paramName = (string)paramDict["parameterName"];
+                                    var paramName = (string)paramDict!["parameterName"];
                                     var value = (string)paramDict["value"];
                                     var param = element.LookupParameter(paramName);
                                     if (param != null && !param.IsReadOnly && param.Set(value))

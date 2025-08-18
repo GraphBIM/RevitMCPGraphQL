@@ -94,12 +94,20 @@ public sealed class HttpGraphQlServer
             {
                 HandleRequest(ctx, schema, executer);
             }
-            catch
+            catch (Exception ex)
             {
                 try
                 {
-                    ctx.Response.StatusCode = 500;
-                    ctx.Response.OutputStream.Close();
+                    var res = ctx.Response;
+                    res.StatusCode = 500;
+                    res.ContentType = "application/json";
+                    var payload = JsonConvert.SerializeObject(new
+                    {
+                        errors = new[] { new { message = "Internal Server Error", detail = ex.Message } }
+                    });
+                    var bytes = Encoding.UTF8.GetBytes(payload);
+                    res.OutputStream.Write(bytes, 0, bytes.Length);
+                    res.OutputStream.Close();
                 }
                 catch
                 {
@@ -186,7 +194,7 @@ public sealed class HttpGraphQlServer
             JTokenType.Float => (double)token,
             JTokenType.Boolean => (bool)token,
             JTokenType.Null => null,
-            JTokenType.String => (string)token,
+            JTokenType.String => (string)token!,
             _ => ((JValue)token).Value
         };
     }
