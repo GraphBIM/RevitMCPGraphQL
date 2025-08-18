@@ -151,7 +151,6 @@ public sealed class HttpGraphQlServer
         using var reader = new StreamReader(req.InputStream, req.ContentEncoding);
         var body = reader.ReadToEnd();
         var request = JsonConvert.DeserializeObject<GraphQlHttpRequest>(body) ?? new GraphQlHttpRequest();
-        Dictionary<string, object?>? dictionary = request.Variables!.ToObject<Dictionary<string, object?>>();
         var result = executer.ExecuteAsync(options =>
         {
             options.Schema = schema;
