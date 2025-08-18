@@ -52,9 +52,11 @@ internal class RevitQueryProvider
                     var doc = _getDoc();
                     if (doc == null) return new List<CategoryDto>();
                     // categories of current document instnace document 
-                    var categories = doc.Settings.Categories
-                        .Cast<Category>()
+                    var categories = new FilteredElementCollector(doc)
+                        .WhereElementIsNotElementType()
+                        .Select(e => e.Category)
                         .Where(c => c != null)
+                        .Distinct()
                         .Select(c =>
                         {
                             string? bicName = null;
@@ -178,7 +180,6 @@ internal class RevitQueryProvider
                                 .ToList(),
                         })
                         .ToList();
-                        
                 });
             });
 
