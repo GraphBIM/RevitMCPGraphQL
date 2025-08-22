@@ -12,6 +12,34 @@ public class GraphQlRevitAddIn : IExternalApplication
     {
         // Resolve load Assembly path
         AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolve;
+
+
+        // Add buttons to the default Add-Ins tab
+        string panelName = "MCP GraphQl";
+        RibbonPanel? panel = null;
+        panel = application.CreateRibbonPanel(panelName);
+
+        string assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+        PushButtonData startButton = new PushButtonData(
+            "StartButton",
+            "Start",
+            assemblyPath,
+            "RevitMCPGraphQL.Command.StartCommand"
+        );
+        startButton.ToolTip = "Start the GraphQL server";
+
+        PushButtonData stopButton = new PushButtonData(
+            "StopButton",
+            "Stop",
+            assemblyPath,
+            "RevitMCPGraphQL.Command.StopCommand"
+        );
+        stopButton.ToolTip = "Stop the GraphQL server";
+
+        panel.AddItem(startButton);
+        panel.AddItem(stopButton);
+
         return Result.Succeeded;
     }
 
