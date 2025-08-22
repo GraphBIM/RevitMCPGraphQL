@@ -3,7 +3,6 @@ using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
 using CategoryType = RevitMCPGraphQL.GraphQL.Types.CategoryType;
-using DocumentType = Autodesk.Revit.DB.DocumentType;
 using ElementType = RevitMCPGraphQL.GraphQL.Types.ElementType;
 
 namespace RevitMCPGraphQL.GraphQL;

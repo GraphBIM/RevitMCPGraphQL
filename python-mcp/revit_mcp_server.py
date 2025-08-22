@@ -48,6 +48,11 @@ async def health() -> Any:
     return _post("{ health }")
 
 @mcp.tool()
+async def document() -> Any:
+    """Return document info."""
+    return _post("{ document { title pathName isFamilyDocument  } }")
+
+@mcp.tool()
 async def categories() -> Any:
     """Return list of categories (id, name)."""
     return _post("{ categories { id name } }")
