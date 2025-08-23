@@ -201,4 +201,68 @@ public class GraphQLIntegrationTests
         Assert.That(arr, Is.Not.Null);
         Assert.That(arr!.Count, Is.EqualTo(0));
     }
+
+    [Test]
+    public async Task Materials_WithLimit_Works()
+    {
+        const string q = "query($limit:Int){ materials(limit:$limit){ id name class appearanceAssetName } }";
+        var data = await PostGraphQLAsync(q, new { limit = 3 });
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["materials"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task Worksets_Works()
+    {
+        const string q = "query { worksets { id name kind } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["worksets"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task Phases_Works()
+    {
+        const string q = "query { phases { id name } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["phases"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task ElementTypes_Works()
+    {
+        const string q = "query { elementTypes { id name familyName categoryName } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["elementTypes"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task ElementsByCategory_Works()
+    {
+        const string q = "query { elementsByCategory(category: OST_Walls, limit: 2) { id name } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["elementsByCategory"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task ElementsInBoundingBox_Works()
+    {
+        const string q = "query { elementsInBoundingBox(minX:-100000,minY:-100000,minZ:-100000,maxX:100000,maxY:100000,maxZ:100000, limit: 2) { id name } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["elementsInBoundingBox"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task ActiveView_And_Selection_Works()
+    {
+        const string q = "query { activeView { id name viewType isTemplate } selection }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        // activeView can be null for some states, selection is always an array
+        Assert.That(data!["selection"], Is.Not.Null);
+    }
 }

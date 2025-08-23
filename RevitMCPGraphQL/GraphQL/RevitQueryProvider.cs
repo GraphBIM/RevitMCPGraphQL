@@ -35,7 +35,20 @@ internal class RevitQueryProvider
             new Queries.FamiliesQueryContributor(),
             new Queries.FamilyInstancesQueryContributor(),
             new Queries.ProjectInfoQueryContributor(),
-            new Queries.ElementsByIdQueryContributor()
+            new Queries.ElementsByIdQueryContributor(),
+            new Queries.MaterialsQueryContributor(),
+            new Queries.WorksetsQueryContributor(),
+            new Queries.PhasesQueryContributor(),
+            new Queries.DesignOptionsQueryContributor(),
+            new Queries.LinksQueryContributor(),
+            new Queries.SheetsQueryContributor(),
+            new Queries.GridsQueryContributor(),
+            new Queries.ProjectLocationQueryContributor(),
+            new Queries.WarningsQueryContributor(),
+            new Queries.ElementTypesQueryContributor(),
+            new Queries.ElementsByCategoryQueryContributor(),
+            new Queries.ActiveViewAndSelectionQueryContributor(),
+            new Queries.ElementsInBoundingBoxQueryContributor()
         };
 
         foreach (var c in contributors)

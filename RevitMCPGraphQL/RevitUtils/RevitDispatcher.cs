@@ -32,6 +32,22 @@ internal static class RevitDispatcher
         _extEvent.Raise();
         return tcs.Task.GetAwaiter().GetResult();
     }
+
+    public static T Invoke<T>(Func<UIApplication, T> func)
+    {
+        if (!_initialized || _extEvent == null || _handler == null)
+            throw new InvalidOperationException("RevitDispatcher not initialized.");
+
+        var tcs = new TaskCompletionSource<T>();
+        var uiApp = _handler.UIApplication;
+        _handler.Enqueue(() =>
+        {
+            try { tcs.SetResult(func(uiApp)); }
+            catch (Exception ex) { tcs.SetException(ex); }
+        });
+        _extEvent.Raise();
+        return tcs.Task.GetAwaiter().GetResult();
+    }
 }
 
 internal sealed class RevitExternalEventHandler : IExternalEventHandler
@@ -43,6 +59,8 @@ internal sealed class RevitExternalEventHandler : IExternalEventHandler
     {
         _uiApp = uiApp;
     }
+
+    public UIApplication UIApplication => _uiApp;
 
     public void Enqueue(Action action) => _queue.Enqueue(action);
 
