@@ -48,6 +48,7 @@ internal class RevitQueryProvider
             new Queries.WarningsQueryContributor(),
             new Queries.ElementTypesQueryContributor(),
             new Queries.ElementsByCategoryQueryContributor(),
+            new Queries.ElementRelationshipQueryContributor(),
             new Queries.ActiveViewAndSelectionQueryContributor(),
             new Queries.ElementsInBoundingBoxQueryContributor(),
             new Queries.UnitsQueryContributor()
