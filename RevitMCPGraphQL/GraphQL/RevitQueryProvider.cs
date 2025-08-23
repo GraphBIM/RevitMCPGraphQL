@@ -25,6 +25,7 @@ internal class RevitQueryProvider
         var contributors = new IQueryContributor[]
         {
             new Queries.HealthQueryContributor(),
+            new Queries.ModelHealthQueryContributor(),
             new Queries.DocumentQueryContributor(),
             new Queries.CategoriesQueryContributor(),
             new Queries.ElementsQueryContributor(),
