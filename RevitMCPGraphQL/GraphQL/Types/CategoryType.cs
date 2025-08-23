@@ -3,7 +3,7 @@ using RevitMCPGraphQL.GraphQL.Models;
 
 namespace RevitMCPGraphQL.GraphQL.Types;
 
-public class CategoryType : ObjectGraphType<CategoryDto>
+public sealed class CategoryType : ObjectGraphType<CategoryDto>
 {
     public CategoryType()
     {

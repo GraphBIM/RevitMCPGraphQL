@@ -3,7 +3,7 @@ using RevitMCPGraphQL.GraphQL.Models;
 
 namespace RevitMCPGraphQL.GraphQL.Types;
 
-public class ParameterType : ObjectGraphType<ParameterDto>
+public sealed class ParameterType : ObjectGraphType<ParameterDto>
 {
     public ParameterType()
     {

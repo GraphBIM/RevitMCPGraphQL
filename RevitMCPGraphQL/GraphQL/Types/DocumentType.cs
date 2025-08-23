@@ -3,7 +3,7 @@ using RevitMCPGraphQL.GraphQL.Models;
 
 namespace RevitMCPGraphQL.GraphQL.Types;
 
-public class DocumentType : ObjectGraphType<DocumentDto>
+public sealed class DocumentType : ObjectGraphType<DocumentDto>
 {
     public DocumentType()
     {

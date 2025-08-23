@@ -3,7 +3,7 @@ using RevitMCPGraphQL.GraphQL.Models;
 
 namespace RevitMCPGraphQL.GraphQL.Types;
 
-public class ElementType : ObjectGraphType<ElementDto>
+public sealed class ElementType : ObjectGraphType<ElementDto>
 {
     public ElementType()
     {

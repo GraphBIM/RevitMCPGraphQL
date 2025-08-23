@@ -3,7 +3,7 @@ using RevitMCPGraphQL.GraphQL.Models;
 
 namespace RevitMCPGraphQL.GraphQL.Types;
 
-public class RoomType : ObjectGraphType<RoomDto>
+public sealed class RoomType : ObjectGraphType<RoomDto>
 {
     public RoomType()
     {
