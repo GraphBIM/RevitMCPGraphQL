@@ -42,6 +42,7 @@ internal class RevitQueryProvider
             new Queries.DesignOptionsQueryContributor(),
             new Queries.LinksQueryContributor(),
             new Queries.SheetsQueryContributor(),
+            new Queries.SchedulesQueryContributor(),
             new Queries.GridsQueryContributor(),
             new Queries.ProjectLocationQueryContributor(),
             new Queries.WarningsQueryContributor(),
