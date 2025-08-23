@@ -60,6 +60,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" Condition=" '$(TargetFramework)' == 'net8.0-windows' "/>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" Condition=" '$(TargetFramework)' == 'net8.0-windows' " />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.8" />
+    <PackageReference Include="NPOI" Version="2.6.1" />
         <PackageReference Include="Nice3point.Revit.Build.Tasks" Version="3.0.1"/>
         <PackageReference Include="Nice3point.Revit.Toolkit" Version="$(RevitVersion).*"/>
         <PackageReference Include="Nice3point.Revit.Extensions" Version="$(RevitVersion).*"/>

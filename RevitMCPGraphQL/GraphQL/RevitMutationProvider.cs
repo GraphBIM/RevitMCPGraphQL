@@ -31,6 +31,8 @@ internal sealed class RevitMutationProvider
             new CreateFamilyInstanceContributor(),
             new DuplicateViewContributor(),
             new CreateSheetContributor(),
+            new ExportSchedulesToExcelContributor(),
+            new ImportScheduleFromExcelContributor(),
         };
 
         foreach (var c in contributors)
