@@ -25,6 +25,8 @@ internal sealed class RevitMutationProvider
             new RotateElementsContributor(),
             new DeleteElementsContributor(),
             new CreateFamilyInstanceContributor(),
+            new DuplicateViewContributor(),
+            new CreateSheetContributor(),
         };
 
         foreach (var c in contributors)
