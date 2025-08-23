@@ -11,10 +11,14 @@ internal sealed class ElementsQueryContributor : IQueryContributor
     public void Register(ObjectGraphType query, Func<Autodesk.Revit.DB.Document?> getDoc)
     {
         query.Field<ListGraphType<ElementType>>("elements")
-            .Arguments(new QueryArguments(new QueryArgument<StringGraphType> { Name = "categoryName" }))
+            .Arguments(new QueryArguments(
+                new QueryArgument<StringGraphType> { Name = "categoryName" },
+                new QueryArgument<IntGraphType> { Name = "limit" }
+            ))
             .Resolve(context =>
             {
                 var categoryName = context.GetArgument<string>("categoryName");
+                var limit = context.GetArgument<int?>("limit");
                 return RevitDispatcher.Invoke(() =>
                 {
                     var doc = getDoc();
@@ -34,7 +38,7 @@ internal sealed class ElementsQueryContributor : IQueryContributor
                         }
                     }
 
-                    return collector.ToElements()
+                    var list = collector.ToElements()
                         .Cast<Element>()
                         .Select(e => new ElementDto
                         {
@@ -51,6 +55,9 @@ internal sealed class ElementsQueryContributor : IQueryContributor
                                 .ToList(),
                         })
                         .ToList();
+
+                    if (limit.HasValue) list = list.Take(limit.Value).ToList();
+                    return list;
                 });
             });
     }

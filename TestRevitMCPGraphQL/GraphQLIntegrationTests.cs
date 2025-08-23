@@ -123,4 +123,82 @@ public class GraphQLIntegrationTests
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["rooms"], Is.Not.Null);
     }
+
+    [Test]
+    public async Task Elements_WithLimit_Works()
+    {
+        const string q = "query($limit:Int){ elements(limit:$limit){ id } }";
+        var data = await PostGraphQLAsync(q, new { limit = 2 });
+        Assert.That(data, Is.Not.Null);
+        var arr = data!["elements"]?.AsArray();
+        Assert.That(arr, Is.Not.Null);
+        Assert.That(arr!.Count, Is.LessThanOrEqualTo(2));
+    }
+
+    [Test]
+    public async Task Rooms_WithLimit_Works()
+    {
+        const string q = "query($limit:Int){ rooms(limit:$limit){ id } }";
+        var data = await PostGraphQLAsync(q, new { limit = 2 });
+        Assert.That(data, Is.Not.Null);
+        var arr = data!["rooms"]?.AsArray();
+        Assert.That(arr, Is.Not.Null);
+        Assert.That(arr!.Count, Is.LessThanOrEqualTo(2));
+    }
+
+    [Test]
+    public async Task Levels_Works()
+    {
+        const string q = "query { levels { id name elevation } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["levels"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task Views_Works()
+    {
+        const string q = "query { views(limit:5) { id name viewType isTemplate } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["views"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task Families_Works()
+    {
+        const string q = "query { families(limit:5) { id name categoryName } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["families"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task FamilyInstances_Works()
+    {
+        const string q = "query { familyInstances(limit:5) { id name familyName typeName categoryName levelId } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["familyInstances"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task ProjectInfo_Works()
+    {
+        const string q = "query { projectInfo { projectName projectNumber organizationName buildingName } }";
+        var data = await PostGraphQLAsync(q);
+        Assert.That(data, Is.Not.Null);
+        Assert.That(data!["projectInfo"], Is.Not.Null);
+    }
+
+    [Test]
+    public async Task ElementsById_Works_WhenEmpty()
+    {
+        const string q = "query($ids:[Int]) { elementsById(ids:$ids){ id name } }";
+        var data = await PostGraphQLAsync(q, new { ids = Array.Empty<int>() });
+        Assert.That(data, Is.Not.Null);
+        var arr = data!["elementsById"]?.AsArray();
+        Assert.That(arr, Is.Not.Null);
+        Assert.That(arr!.Count, Is.EqualTo(0));
+    }
 }

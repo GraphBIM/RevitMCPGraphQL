@@ -1,3 +1,4 @@
+using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
@@ -8,13 +9,16 @@ internal sealed class RoomsQueryContributor : IQueryContributor
 {
     public void Register(ObjectGraphType query, Func<Autodesk.Revit.DB.Document?> getDoc)
     {
-        query.Field<ListGraphType<RoomType>>("rooms").Resolve(context =>
+        query.Field<ListGraphType<RoomType>>("rooms")
+            .Arguments(new QueryArguments(new QueryArgument<IntGraphType> { Name = "limit" }))
+            .Resolve(context =>
         {
+            var limit = context.GetArgument<int?>("limit");
             return RevitDispatcher.Invoke(() =>
             {
                 var doc = getDoc();
                 if (doc == null) return new List<RoomDto>();
-                return new FilteredElementCollector(doc)
+                var list = new FilteredElementCollector(doc)
                     .OfCategory(BuiltInCategory.OST_Rooms)
                     .WhereElementIsNotElementType()
                     .ToElements()
@@ -27,6 +31,8 @@ internal sealed class RoomsQueryContributor : IQueryContributor
                         Area = r.Area
                     })
                     .ToList();
+                if (limit.HasValue) list = list.Take(limit.Value).ToList();
+                return list;
             });
         });
     }

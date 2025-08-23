@@ -29,7 +29,13 @@ internal class RevitQueryProvider
             new Queries.CategoriesQueryContributor(),
             new Queries.ElementsQueryContributor(),
             new Queries.FamilyTypesQueryContributor(),
-            new Queries.RoomsQueryContributor()
+            new Queries.RoomsQueryContributor(),
+            new Queries.LevelsQueryContributor(),
+            new Queries.ViewsQueryContributor(),
+            new Queries.FamiliesQueryContributor(),
+            new Queries.FamilyInstancesQueryContributor(),
+            new Queries.ProjectInfoQueryContributor(),
+            new Queries.ElementsByIdQueryContributor()
         };
 
         foreach (var c in contributors)
