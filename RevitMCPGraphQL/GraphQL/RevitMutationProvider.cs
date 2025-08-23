@@ -14,7 +14,11 @@ internal sealed class RevitMutationProvider
 
     public IObjectGraphType GetMutation()
     {
-        var mutation = new ObjectGraphType();
+        var mutation = new ObjectGraphType
+        {
+            // Important: give the root mutation a unique name to avoid duplicate 'Object' types
+            Name = "Mutation"
+        };
 
         var contributors = new IMutationContributor[]
         {

@@ -19,7 +19,11 @@ internal class RevitQueryProvider
 
     public IObjectGraphType GetQuery()
     {
-        var query = new ObjectGraphType();
+        var query = new ObjectGraphType
+        {
+            // Important: give the root query a unique name to avoid duplicate 'Object' types
+            Name = "Query"
+        };
 
         // Register modular query contributors
         var contributors = new IQueryContributor[]
