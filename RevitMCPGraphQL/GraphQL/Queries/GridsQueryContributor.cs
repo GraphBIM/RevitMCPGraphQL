@@ -1,6 +1,5 @@
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
-using RevitMCPGraphQL.GraphQL.Types;
 using GridType = RevitMCPGraphQL.GraphQL.Types.GridType;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;

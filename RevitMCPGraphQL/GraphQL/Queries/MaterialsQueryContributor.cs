@@ -1,4 +1,3 @@
-using Autodesk.Revit.DB;
 using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;

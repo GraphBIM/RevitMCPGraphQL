@@ -1,10 +1,5 @@
-using GraphQL;
 using GraphQL.Types;
-using RevitMCPGraphQL.GraphQL.Models;
-using RevitMCPGraphQL.GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Queries;
-using CategoryType = RevitMCPGraphQL.GraphQL.Types.CategoryType;
-using ElementType = RevitMCPGraphQL.GraphQL.Types.ElementType;
 
 namespace RevitMCPGraphQL.GraphQL;
 

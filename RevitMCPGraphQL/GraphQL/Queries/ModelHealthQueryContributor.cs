@@ -1,9 +1,7 @@
-using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
-using System.Linq;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 

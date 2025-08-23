@@ -1,7 +1,6 @@
 using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
-using RevitMCPGraphQL.GraphQL.Types;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 

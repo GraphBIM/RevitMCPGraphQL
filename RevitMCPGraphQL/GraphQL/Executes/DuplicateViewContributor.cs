@@ -1,5 +1,3 @@
-using System;
-using Autodesk.Revit.DB;
 using GraphQL;
 using GraphQL.Types;
 
