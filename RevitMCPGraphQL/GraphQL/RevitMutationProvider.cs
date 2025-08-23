@@ -19,6 +19,12 @@ internal sealed class RevitMutationProvider
         var contributors = new IMutationContributor[]
         {
             new SetElementParametersBatchContributor(),
+            new SetElementParameterContributor(),
+            new SetElementTypeContributor(),
+            new MoveElementsContributor(),
+            new RotateElementsContributor(),
+            new DeleteElementsContributor(),
+            new CreateFamilyInstanceContributor(),
         };
 
         foreach (var c in contributors)
