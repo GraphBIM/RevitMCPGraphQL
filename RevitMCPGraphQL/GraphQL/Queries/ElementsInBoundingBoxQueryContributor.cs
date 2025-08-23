@@ -41,6 +41,7 @@ internal sealed class ElementsInBoundingBoxQueryContributor : IQueryContributor
                     .Select(e => new ElementDto
                     {
                         Id = e.Id?.Value ?? 0,
+                        TypeId = e.GetTypeId()?.Value,
                         Name = e.Name,
                         Parameters = e.Parameters
                             .Cast<Parameter>()

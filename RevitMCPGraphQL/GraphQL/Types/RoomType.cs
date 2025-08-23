@@ -10,6 +10,8 @@ public sealed class RoomType : ObjectGraphType<RoomDto>
         Field(x => x.Id).Description("Room ID");
         Field(x => x.Name, nullable: true).Description("Room name");
         Field(x => x.Number, nullable: true).Description("Room number");
-        Field(x => x.Area).Description("Room area");
+        Field<ListGraphType<ParameterType>>("parameters")
+            .Resolve(ctx => ctx.Source.Parameters)
+            .Description("List of parameters for the room");
     }
 }

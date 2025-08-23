@@ -30,6 +30,7 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
                                 result.Add(new ElementDto
                                 {
                                     Id = e.Id?.Value ?? 0,
+                                    TypeId = e.GetTypeId()?.Value,
                                     Name = e.Name,
                                     Parameters = e.Parameters
                                         .Cast<Parameter>()

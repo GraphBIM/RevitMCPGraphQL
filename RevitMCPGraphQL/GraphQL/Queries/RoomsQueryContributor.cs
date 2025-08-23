@@ -28,7 +28,15 @@ internal sealed class RoomsQueryContributor : IQueryContributor
                         Id = r.Id?.Value ?? 0,
                         Name = r.Name,
                         Number = r.Number,
-                        Area = r.Area
+                        Parameters = r.Parameters
+                            .Cast<Parameter>()
+                            .Where(p => p != null && p.Definition != null)
+                            .Select(p => new ParameterDto
+                            {
+                                Name = p.Definition!.Name,
+                                Value = p.AsValueString(),
+                            })
+                            .ToList()
                     })
                     .ToList();
                 if (limit.HasValue) list = list.Take(limit.Value).ToList();
