@@ -69,7 +69,7 @@ public sealed class HttpGraphQlServer
         var schema = new Schema
         {
             Query = new RevitQueryProvider(_getDoc).GetQuery(),
-            Mutation = new RevitExecuteProvider(_getDoc)
+            Mutation = new RevitMutationProvider(_getDoc).GetMutation()
         };
         var executer = new DocumentExecuter();
 

@@ -79,6 +79,10 @@
         <HintPath>..\..\..\AppData\Roaming\Autodesk\Revit\Addins\2024\RevitLookup\RevitLookup.dll</HintPath>
       </Reference>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="GraphQL\Executes\" />
+    </ItemGroup>
     <Target Name="CopyFiles" AfterTargets="CoreBuild" Condition="$(Configuration.Contains('Debug'))">
         <ItemGroup>
             <RootItem Include="$(ProjectDir)*.addin" />
