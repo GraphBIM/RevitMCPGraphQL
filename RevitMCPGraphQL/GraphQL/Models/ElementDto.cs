@@ -7,4 +7,5 @@ public sealed class ElementDto
     public long? TypeId { get; set; }
     
     public List<ParameterDto> Parameters { get; set; } = new();
+    public BoundingBoxDto? BBox { get; set; }
 }

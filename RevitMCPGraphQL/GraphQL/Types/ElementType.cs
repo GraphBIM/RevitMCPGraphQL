@@ -10,6 +10,9 @@ public sealed class ElementType : ObjectGraphType<ElementDto>
         Field(x => x.Id);
         Field(x => x.Name, nullable: true);
         Field(x => x.TypeId, nullable: true);
+        Field<BoundingBoxType>("bbox")
+            .Resolve(ctx => ctx.Source.BBox)
+            .Description("Element bounding box (in document display units)");
         // Parameters as a key-value map: { "ParamName": "Value", ... }
         Field<StringMapScalarType>("parameters")
             .Resolve(context =>
@@ -24,8 +27,22 @@ public sealed class ElementType : ObjectGraphType<ElementDto>
                     if (!dict.ContainsKey(key))
                         dict[key] = p.Value ?? string.Empty;
                 }
+
                 return dict;
             })
             .Description("Parameters as a key-value map, keyed by parameter name");
+    }
+}
+
+public sealed class BoundingBoxType : ObjectGraphType<BoundingBoxDto>
+{
+    public BoundingBoxType()
+    {
+        Field(x => x.MinX);
+        Field(x => x.MinY);
+        Field(x => x.MinZ);
+        Field(x => x.MaxX);
+        Field(x => x.MaxY);
+        Field(x => x.MaxZ);
     }
 }

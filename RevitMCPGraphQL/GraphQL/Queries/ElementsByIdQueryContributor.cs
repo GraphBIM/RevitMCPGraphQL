@@ -2,6 +2,7 @@ using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.RevitUtils;
+using Autodesk.Revit.DB;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
@@ -46,7 +47,8 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
                                     Id = e.Id?.Value ?? 0,
                                     TypeId = e.GetTypeId()?.Value,
                                     Name = e.Name,
-                                    Parameters = BuildCombinedParameters(e, doc, isUnit, includeTypeParams, includeSet)
+                                    Parameters = CombinedParametersBuilder.BuildCombinedParameters(e, doc, isUnit, includeTypeParams, includeSet),
+                                    BBox = BoundingBoxBuilder.BuildBBoxDto(e, doc)
                                 });
                             }
                         }
@@ -57,44 +59,6 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
             });
     }
 
-    private static List<ParameterDto> BuildCombinedParameters(Element e, Autodesk.Revit.DB.Document doc, bool isUnit, bool includeTypeParams, HashSet<string>? includeSet)
-    {
-        var list = new List<ParameterDto>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    
 
-        foreach (var p in e.Parameters.Cast<Parameter>())
-        {
-            if (p?.Definition == null) continue;
-            var name = p.Definition!.Name;
-            if (includeSet != null && !includeSet.Contains(name)) continue;
-            if (seen.Add(name))
-                list.Add(new ParameterDto { Name = name, Value = ParameterValueFormatter.GetValue(p, doc, isUnit) });
-        }
-
-        if (includeTypeParams)
-        {
-            try
-            {
-                var typeId = e.GetTypeId();
-                if (typeId != null)
-                {
-                    var typeElem = doc.GetElement(typeId);
-                    if (typeElem != null)
-                    {
-                        foreach (var p in typeElem.Parameters.Cast<Parameter>())
-                        {
-                            if (p?.Definition == null) continue;
-                            var name = p.Definition!.Name;
-                            if (includeSet != null && !includeSet.Contains(name)) continue;
-                            if (seen.Add(name))
-                                list.Add(new ParameterDto { Name = name, Value = ParameterValueFormatter.GetValue(p, doc, isUnit) });
-                        }
-                    }
-                }
-            }
-            catch { /* ignore type param errors */ }
-        }
-
-        return list;
-    }
 }
