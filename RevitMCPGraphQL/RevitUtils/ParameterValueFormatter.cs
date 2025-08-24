@@ -59,7 +59,7 @@ internal static class ParameterValueFormatter
                     return internalVal.ToString(CultureInfo.InvariantCulture);
                 }
                 case StorageType.ElementId:
-                    return (p.AsElementId()?.IntegerValue ?? ElementId.InvalidElementId.IntegerValue)
+                    return (p.AsElementId()?.Value ?? ElementId.InvalidElementId.Value)
                         .ToString(CultureInfo.InvariantCulture);
                 default:
                     return p.AsString() ?? string.Empty;

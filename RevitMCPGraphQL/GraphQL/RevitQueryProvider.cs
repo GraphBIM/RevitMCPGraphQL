@@ -51,7 +51,8 @@ internal class RevitQueryProvider
             new Queries.ElementRelationshipQueryContributor(),
             new Queries.ActiveViewAndSelectionQueryContributor(),
             new Queries.ElementsInBoundingBoxQueryContributor(),
-            new Queries.UnitsQueryContributor()
+            new Queries.UnitsQueryContributor(),
+            new Queries.CoordinatesQueryContributor()
         };
 
         foreach (var c in contributors)
