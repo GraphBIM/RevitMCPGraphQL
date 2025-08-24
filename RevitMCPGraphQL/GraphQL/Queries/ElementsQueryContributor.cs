@@ -14,13 +14,15 @@ internal sealed class ElementsQueryContributor : IQueryContributor
             .Arguments(new QueryArguments(
                 new QueryArgument<StringGraphType> { Name = "categoryName" },
         new QueryArgument<IntGraphType> { Name = "limit" },
-                   new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." }
+                   new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." },
+                   new QueryArgument<BooleanGraphType> { Name = "isUnit", Description = "If true (default), parameter values include unit symbols; otherwise numeric only.", DefaultValue = true }
             ))
             .Resolve(context =>
             {
                 var categoryName = context.GetArgument<string>("categoryName");
                 var limit = context.GetArgument<int?>("limit");
                    var documentId = context.GetArgument<long?>("documentId");
+                var isUnit = context.GetArgument<bool>("isUnit", true);
                 return RevitDispatcher.Invoke(() =>
                 {
                        var doc = DocumentResolver.ResolveDocument(getDoc(), documentId);
@@ -47,13 +49,13 @@ internal sealed class ElementsQueryContributor : IQueryContributor
                             Id = e.Id?.Value ?? 0,
                             TypeId = e.GetTypeId()?.Value,
                             Name = e.Name,
-                            Parameters = e.Parameters
+                Parameters = e.Parameters
                                 .Cast<Parameter>()
                                 .Where(p => p != null && p.Definition != null)
                                 .Select(p => new ParameterDto
                                 {
                                     Name = p.Definition!.Name,
-                                    Value = p.AsValueString(),
+                    Value = ParameterValueFormatter.GetValue(p, doc, isUnit),
                                 })
                                 .ToList(),
                         })

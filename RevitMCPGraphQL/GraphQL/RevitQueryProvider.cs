@@ -36,7 +36,6 @@ internal class RevitQueryProvider
             new Queries.FamilyInstancesQueryContributor(),
             new Queries.ProjectInfoQueryContributor(),
             new Queries.ElementsByIdQueryContributor(),
-            new Queries.ElementsByIdFromDocumentQueryContributor(),
             new Queries.MaterialsQueryContributor(),
             new Queries.WorksetsQueryContributor(),
             new Queries.PhasesQueryContributor(),
