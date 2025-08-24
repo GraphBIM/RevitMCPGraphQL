@@ -1,29 +1,34 @@
+using Autodesk.Revit.DB;
 using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
 internal sealed class FamilyTypesQueryContributor : IQueryContributor
 {
-    public void Register(ObjectGraphType query, Func<Autodesk.Revit.DB.Document?> getDoc)
+    public void Register(ObjectGraphType query, Func<Document?> getDoc)
     {
         query.Field<ListGraphType<FamilySymbolType>>("familyTypes")
             .Arguments(new QueryArguments(
                 new QueryArgument<StringGraphType> { Name = "categoryName" },
                 new QueryArgument<StringGraphType> { Name = "familyName" },
-                new QueryArgument<IntGraphType> { Name = "limit" }
+                new QueryArgument<IntGraphType> { Name = "limit" },
+                new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." }
             ))
             .Resolve(context =>
             {
                 var categoryName = context.GetArgument<string>("categoryName");
                 var familyName = context.GetArgument<string>("familyName");
                 var limit = context.GetArgument<int?>("limit");
+                var requestedId = context.GetArgument<long?>("documentId");
 
                 return RevitDispatcher.Invoke(() =>
                 {
-                    var doc = getDoc();
+                    var hostDoc = getDoc();
+                    var doc = DocumentResolver.ResolveDocument(hostDoc, requestedId);
                     if (doc == null) return new List<FamilySymbolDto>();
 
                     IEnumerable<FamilySymbol> symbols = new FilteredElementCollector(doc)

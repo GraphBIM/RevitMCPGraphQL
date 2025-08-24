@@ -1,6 +1,7 @@
 using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
@@ -11,15 +12,17 @@ internal sealed class FamiliesQueryContributor : IQueryContributor
     query.Field<ListGraphType<RevitMCPGraphQL.GraphQL.Types.FamilyType>>("families")
             .Arguments(new QueryArguments(
                 new QueryArgument<StringGraphType> { Name = "categoryName" },
-                new QueryArgument<IntGraphType> { Name = "limit" }
+                new QueryArgument<IntGraphType> { Name = "limit" },
+                       new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." }
             ))
             .Resolve(ctx =>
             {
                 var categoryName = ctx.GetArgument<string>("categoryName");
                 var limit = ctx.GetArgument<int?>("limit");
+                       var documentId = ctx.GetArgument<long?>("documentId");
                 return RevitDispatcher.Invoke(() =>
                 {
-                    var doc = getDoc();
+                           var doc = DocumentResolver.ResolveDocument(getDoc(), documentId);
                     if (doc == null) return new List<FamilyDto>();
 
                     IEnumerable<Family> fams = new FilteredElementCollector(doc)

@@ -1,7 +1,10 @@
 using System.Reflection;
+using Autodesk.Revit.DB;
+using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
@@ -10,9 +13,13 @@ internal sealed class UnitsQueryContributor : IQueryContributor
     public void Register(ObjectGraphType query, Func<Document?> getDoc)
     {
         query.Field<ListGraphType<UnitGraphType>>("units")
-            .Resolve(_ => RevitDispatcher.Invoke(() =>
+            .Description("Lists unit settings for the active document or an optionally specified link document.")
+            .Argument<IdGraphType>("documentId", "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document.")
+            .Resolve(ctx => RevitDispatcher.Invoke(() =>
             {
-                var doc = getDoc();
+                var hostDoc = getDoc();
+                var documentId = ctx.GetArgument<long?>("documentId");
+                var doc = DocumentResolver.ResolveDocument(hostDoc, documentId);
                 if (doc == null) return new List<UnitDto>();
 
                 var units = doc.GetUnits();

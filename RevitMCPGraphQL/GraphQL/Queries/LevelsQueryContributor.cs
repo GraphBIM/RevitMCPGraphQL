@@ -2,6 +2,7 @@ using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitLevel = Autodesk.Revit.DB.Level;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
@@ -10,13 +11,17 @@ internal sealed class LevelsQueryContributor : IQueryContributor
     public void Register(ObjectGraphType query, Func<Autodesk.Revit.DB.Document?> getDoc)
     {
     query.Field<ListGraphType<RevitMCPGraphQL.GraphQL.Types.LevelType>>("levels")
-            .Arguments(new QueryArguments(new QueryArgument<IntGraphType> { Name = "limit" }))
+            .Arguments(new QueryArguments(
+                new QueryArgument<IntGraphType> { Name = "limit" },
+                new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." }
+            ))
             .Resolve(ctx =>
             {
                 var limit = ctx.GetArgument<int?>("limit");
+                var documentId = ctx.GetArgument<long?>("documentId");
                 return RevitDispatcher.Invoke(() =>
                 {
-                    var doc = getDoc();
+                    var doc = DocumentResolver.ResolveDocument(getDoc(), documentId);
                     if (doc == null) return new List<LevelDto>();
 
                     var levels = new FilteredElementCollector(doc)

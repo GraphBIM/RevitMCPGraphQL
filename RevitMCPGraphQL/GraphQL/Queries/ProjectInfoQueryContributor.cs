@@ -1,6 +1,8 @@
 using GraphQL.Types;
+using GraphQL;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
@@ -9,11 +11,13 @@ internal sealed class ProjectInfoQueryContributor : IQueryContributor
     public void Register(ObjectGraphType query, Func<Autodesk.Revit.DB.Document?> getDoc)
     {
         query.Field<ProjectInfoType>("projectInfo")
-            .Resolve(_ =>
+            .Arguments(new QueryArguments(new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." }))
+            .Resolve(ctx =>
             {
                 return RevitDispatcher.Invoke(() =>
                 {
-                    var doc = getDoc();
+                    var docId = ctx.GetArgument<long?>("documentId");
+                    var doc = DocumentResolver.ResolveDocument(getDoc(), docId);
                     if (doc == null) return new ProjectInfoDto();
                     var pi = doc.ProjectInformation;
                     if (pi == null) return new ProjectInfoDto();

@@ -1,25 +1,30 @@
+using Autodesk.Revit.DB;
 using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
 internal sealed class ElementRelationshipQueryContributor : IQueryContributor
 {
-    public void Register(ObjectGraphType query, Func<Autodesk.Revit.DB.Document?> getDoc)
+    public void Register(ObjectGraphType query, Func<Document?> getDoc)
     {
         query.Field<ElementRelationshipType>("elementRelationship")
-            .Description("Get relationships for an element: super component, host, dependents, joined elements.")
+            .Description("Get relationships for an element: super component, host, dependents, joined elements. Optionally target a link document.")
             .Arguments(new QueryArguments(
-                new QueryArgument<NonNullGraphType<IdGraphType>> { Name = "elementId" }
+                new QueryArgument<NonNullGraphType<IdGraphType>> { Name = "elementId" },
+                new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." }
             ))
             .Resolve(ctx =>
             {
                 var elementId = ctx.GetArgument<long>("elementId");
                 return RevitDispatcher.Invoke(() =>
                 {
-                    var doc = getDoc();
+                    var hostDoc = getDoc();
+                    var documentId = ctx.GetArgument<long?>("documentId");
+                    var doc = DocumentResolver.ResolveDocument(hostDoc, documentId);
                     if (doc == null) return (object?)null;
                     var el = doc.GetElement(new ElementId(elementId));
                     if (el == null) return (object?)null;

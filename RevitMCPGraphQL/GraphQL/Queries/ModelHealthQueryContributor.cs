@@ -1,7 +1,10 @@
+using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
+using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.GraphQL.Types;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
@@ -10,10 +13,13 @@ internal sealed class ModelHealthQueryContributor : IQueryContributor
     public void Register(ObjectGraphType query, Func<Document?> getDoc)
     {
         query.Field<ModelHealthType>("modelHealth")
+            .Argument<IdGraphType>("documentId", "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document.")
             .Description("Quick model health summary for the active document.")
-            .Resolve(_ => RevitDispatcher.Invoke(() =>
+            .Resolve(ctx => RevitDispatcher.Invoke(() =>
             {
-                var doc = getDoc();
+                var hostDoc = getDoc();
+                var documentId = ctx.GetArgument<long?>("documentId");
+                var doc = DocumentResolver.ResolveDocument(hostDoc, documentId);
                 if (doc == null) return new ModelHealthDto();
 
                 // Warnings
