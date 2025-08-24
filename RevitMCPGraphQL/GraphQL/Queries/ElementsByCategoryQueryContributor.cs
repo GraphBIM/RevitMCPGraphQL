@@ -21,11 +21,13 @@ internal sealed class ElementsByCategoryQueryContributor : IQueryContributor
                     var documentId = ctx.GetArgument<long?>("documentId");
                     var doc = DocumentResolver.ResolveDocument(getDoc(), documentId);
                 if (doc == null) return new List<ElementDto>();
-                var bic = ctx.GetArgument<Autodesk.Revit.DB.BuiltInCategory>("category");
+                var bic = ctx.GetArgument<Autodesk.Revit.DB.BuiltInCategory?>("category", null);
                 var limit = ctx.GetArgument<int?>("limit");
-                var list = new FilteredElementCollector(doc)
-                    .WhereElementIsNotElementType()
-                    .OfCategory(bic)
+                var collector = new FilteredElementCollector(doc)
+                    .WhereElementIsNotElementType();
+                if (bic.HasValue)
+                    collector.OfCategory(bic.Value);
+                var list = collector
                     .ToElements()
                     .Select(e => new ElementDto
                     {
