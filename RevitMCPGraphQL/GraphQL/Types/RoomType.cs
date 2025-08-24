@@ -1,5 +1,6 @@
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
+using RevitMCPGraphQL.RevitUtils;
 
 namespace RevitMCPGraphQL.GraphQL.Types;
 
@@ -27,5 +28,17 @@ public sealed class RoomType : ObjectGraphType<RoomDto>
                 return dict;
             })
             .Description("Parameters as a key-value map, keyed by parameter name");
+
+        Field<BoundingBoxType>("bbox")
+            .Description("Axis-aligned bounding box of the room in display units.")
+            .Resolve(ctx => ctx.Source.BBox);
+
+        Field<ListGraphType<ListGraphType<ListGraphType<FloatGraphType>>>>("boundaries")
+            .Description("Room boundary loops; each point is [x,y,z] in display units.")
+            .Resolve(ctx => ctx.Source.Boundaries);
+
+        Field<ListGraphType<IdGraphType>>("elementsInside")
+            .Description("IDs of elements whose bounding boxes intersect the room.")
+            .Resolve(ctx => ctx.Source.ElementsInside);
     }
 }
