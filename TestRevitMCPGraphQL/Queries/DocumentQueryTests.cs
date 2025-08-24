@@ -15,5 +15,6 @@ public class DocumentQueryTests : BaseGraphQLTest
         var doc = data!["document"];
         Assert.That(doc, Is.Not.Null, "document should exist");
         Assert.That(doc!["title"]?.GetValue<string>(), Is.Not.Null);
+        Console.WriteLine(data);
     }
 }

@@ -13,5 +13,6 @@ public class ElementsInBoundingBoxQueryTests : BaseGraphQLTest
         var data = await PostGraphQLAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["elementsInBoundingBox"], Is.Not.Null);
+        Console.WriteLine(data);
     }
 }

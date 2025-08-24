@@ -14,6 +14,7 @@ public class ElementsQueryTests : BaseGraphQLTest
         var data = await PostGraphQLAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["elements"], Is.Not.Null);
+        Console.WriteLine(data);
     }
 
     [Test]

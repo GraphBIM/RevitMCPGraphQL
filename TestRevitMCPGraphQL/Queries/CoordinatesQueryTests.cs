@@ -13,5 +13,6 @@ public class CoordinatesQueryTests : BaseGraphQLTest
         var data = await PostGraphQLAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["coordinates"], Is.Not.Null);
+        Console.WriteLine(data);
     }
 }

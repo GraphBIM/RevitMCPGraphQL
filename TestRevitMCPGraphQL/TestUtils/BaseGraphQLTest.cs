@@ -13,6 +13,8 @@ public abstract class BaseGraphQLTest
     protected static readonly Uri BaseUri;
     protected static readonly Uri GraphQlUri;
     protected static readonly HttpClient Client = new();
+    // Note: Client is configured in the static constructor to avoid modifying
+    // properties after any requests may have started.
 
     static BaseGraphQLTest()
     {
@@ -20,15 +22,16 @@ public abstract class BaseGraphQLTest
         var path = Environment.GetEnvironmentVariable("GRAPHQL_PATH") ?? "graphql";
         BaseUri = new Uri(baseUrl);
         GraphQlUri = new Uri(BaseUri, path);
+
+    // Configure HttpClient once at type initialization, before any requests
+    Client.Timeout = TimeSpan.FromSeconds(60);
+    Client.DefaultRequestHeaders.Accept.Clear();
+    Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
     [OneTimeSetUp]
     public void OneTimeSetup_Base()
     {
-        Client.Timeout = TimeSpan.FromSeconds(60);
-        Client.DefaultRequestHeaders.Accept.Clear();
-        Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
         // Quick availability check; mark tests inconclusive if server not running
         try
         {

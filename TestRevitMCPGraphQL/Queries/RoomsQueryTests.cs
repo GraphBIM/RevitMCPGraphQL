@@ -9,10 +9,11 @@ public class RoomsQueryTests : BaseGraphQLTest
     [Test]
     public async Task Rooms_Works()
     {
-        const string q = "query { rooms { id name number area } }";
+        const string q = "query { rooms { id name parameters } }";
         var data = await PostGraphQLAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["rooms"], Is.Not.Null);
+        Console.WriteLine(data);
     }
 
     [Test]
@@ -24,5 +25,6 @@ public class RoomsQueryTests : BaseGraphQLTest
         var arr = data!["rooms"]?.AsArray();
         Assert.That(arr, Is.Not.Null);
         Assert.That(arr!.Count, Is.LessThanOrEqualTo(2));
+        Console.WriteLine(arr);
     }
 }

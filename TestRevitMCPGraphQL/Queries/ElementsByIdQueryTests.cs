@@ -9,8 +9,8 @@ public class ElementsByIdQueryTests : BaseGraphQLTest
     [Test]
     public async Task ElementsById_Works_WhenEmpty()
     {
-        const string q = "query($ids:[Int]) { elementsById(ids:$ids){ id name } }";
-        var data = await PostGraphQLAsync(q, new { ids = Array.Empty<int>() });
+    const string q = "query($ids:[ID]) { elementsById(ids:$ids){ id name } }";
+    var data = await PostGraphQLAsync(q, new { ids = Array.Empty<long>() });
         Assert.That(data, Is.Not.Null);
         var arr = data!["elementsById"]?.AsArray();
         Assert.That(arr, Is.Not.Null);

@@ -9,9 +9,10 @@ public class ElementTypesQueryTests : BaseGraphQLTest
     [Test]
     public async Task ElementTypes_Works()
     {
-        const string q = "query { elementTypes { id name familyName categoryName } }";
+        const string q = "query { elementTypes { id name categoryName } }";
         var data = await PostGraphQLAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["elementTypes"], Is.Not.Null);
+        Console.WriteLine(data);
     }
 }

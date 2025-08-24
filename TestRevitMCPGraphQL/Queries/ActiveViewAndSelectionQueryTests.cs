@@ -13,5 +13,6 @@ public class ActiveViewAndSelectionQueryTests : BaseGraphQLTest
         var data = await PostGraphQLAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["selection"], Is.Not.Null);
+        Console.WriteLine(data);
     }
 }
