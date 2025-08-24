@@ -2,6 +2,7 @@ using GraphQL;
 using GraphQL.Types;
 using RevitMCPGraphQL.GraphQL.Models;
 using RevitMCPGraphQL.RevitUtils;
+using Autodesk.Revit.DB;
 
 namespace RevitMCPGraphQL.GraphQL.Queries;
 
@@ -18,11 +19,20 @@ internal sealed class ElementsInBoundingBoxQueryContributor : IQueryContributor
                 new QueryArgument<NonNullGraphType<FloatGraphType>> { Name = "maxY" },
                 new QueryArgument<NonNullGraphType<FloatGraphType>> { Name = "maxZ" },
                 new QueryArgument<IntGraphType> { Name = "limit" },
-                       new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." }
+                       new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." },
+                       new QueryArgument<BooleanGraphType> { Name = "isUnit", Description = "If true (default), parameter values include unit symbols; otherwise numeric only.", DefaultValue = true },
+                       new QueryArgument<BooleanGraphType> { Name = "isIncludeTypeParams", Description = "If true, also include parameters from the element's type.", DefaultValue = false },
+                       new QueryArgument<ListGraphType<StringGraphType>> { Name = "parameterNames", Description = "Optional: only include parameters whose names are in this list (case-insensitive)." }
             ))
             .Resolve(ctx => RevitDispatcher.Invoke(() =>
             {
                        var documentId = ctx.GetArgument<long?>("documentId");
+                       var isUnit = ctx.GetArgument<bool>("isUnit", true);
+                       var includeTypeParams = ctx.GetArgument<bool>("isIncludeTypeParams", false);
+                       var parameterNames = ctx.GetArgument<List<string>>("parameterNames");
+                       var includeSet = (parameterNames != null && parameterNames.Count > 0)
+                           ? new HashSet<string>(parameterNames, StringComparer.OrdinalIgnoreCase)
+                           : null;
                        var doc = DocumentResolver.ResolveDocument(getDoc(), documentId);
                 if (doc == null) return new List<ElementDto>();
 
@@ -41,16 +51,14 @@ internal sealed class ElementsInBoundingBoxQueryContributor : IQueryContributor
                     .WhereElementIsNotElementType()
                     .WherePasses(bbFilter)
                     .ToElements()
+                    .Cast<Element>()
                     .Select(e => new ElementDto
                     {
                         Id = e.Id?.Value ?? 0,
                         TypeId = e.GetTypeId()?.Value,
                         Name = e.Name,
-                        Parameters = e.Parameters
-                            .Cast<Parameter>()
-                            .Where(p => p != null && p.Definition != null)
-                            .Select(p => new ParameterDto { Name = p.Definition!.Name, Value = p.AsValueString() })
-                            .ToList()
+                        Parameters = CombinedParametersBuilder.BuildCombinedParameters(e, doc, isUnit, includeTypeParams, includeSet),
+                        BBox = BoundingBoxBuilder.BuildBBoxDto(e, doc)
                     })
                     .ToList();
                 if (limit.HasValue) list = list.Take(limit.Value).ToList();
