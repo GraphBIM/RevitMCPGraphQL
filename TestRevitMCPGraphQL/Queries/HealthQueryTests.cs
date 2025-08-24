@@ -11,7 +11,7 @@ public class HealthQueryTests : BaseGraphQLTest
     public async Task Health_ReturnsOk()
     {
         const string q = "query { health }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["health"]?.GetValue<string>(), Is.EqualTo("ok"));
     }

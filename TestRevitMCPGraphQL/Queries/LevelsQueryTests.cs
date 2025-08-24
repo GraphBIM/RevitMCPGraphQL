@@ -10,7 +10,7 @@ public class LevelsQueryTests : BaseGraphQLTest
     public async Task Levels_Works()
     {
         const string q = "query { levels { id name elevation } }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["levels"], Is.Not.Null);
     }

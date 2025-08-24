@@ -10,7 +10,7 @@ public class RotateElementsTests : BaseGraphQLTest
     public async Task RotateElements_InvalidIds_ReturnsFalse()
     {
         const string m = "mutation($ids:[ID!]!,$p:PointInput!,$a:VectorInput!,$angle:Float!){ rotateElements(elementIds:$ids, point:$p, axis:$a, angle:$angle) }";
-        var data = await PostGraphQLAsync(m, new
+        var data = await PostGraphQlAsync(m, new
         {
             ids = new long[] { -1, -2 },
             p = new { x = 0.0, y = 0.0, z = 0.0 },

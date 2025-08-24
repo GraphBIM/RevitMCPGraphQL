@@ -10,7 +10,7 @@ public class FamilyInstancesQueryTests : BaseGraphQLTest
     public async Task FamilyInstances_Works()
     {
         const string q = "query { familyInstances(limit:5) { id name familyName typeName categoryName levelId } }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["familyInstances"], Is.Not.Null);
     }

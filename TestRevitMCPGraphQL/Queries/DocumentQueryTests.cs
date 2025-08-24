@@ -10,7 +10,7 @@ public class DocumentQueryTests : BaseGraphQLTest
     public async Task Document_ReturnsShape()
     {
         const string q = "query { document { title pathName isFamilyDocument } }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         var doc = data!["document"];
         Assert.That(doc, Is.Not.Null, "document should exist");

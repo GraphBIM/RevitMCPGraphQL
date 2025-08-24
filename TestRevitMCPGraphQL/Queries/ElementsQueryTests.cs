@@ -11,7 +11,7 @@ public class ElementsQueryTests : BaseGraphQLTest
     {
         // parameters is now a map scalar, so select it directly
         const string q = "query { elements { id name parameters } }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["elements"], Is.Not.Null);
         Console.WriteLine(data);
@@ -21,7 +21,7 @@ public class ElementsQueryTests : BaseGraphQLTest
     public async Task Elements_WithLimit_Works()
     {
         const string q = "query($limit:Int){ elements(limit:$limit){ id } }";
-        var data = await PostGraphQLAsync(q, new { limit = 2 });
+        var data = await PostGraphQlAsync(q, new { limit = 2 });
         Assert.That(data, Is.Not.Null);
         var arr = data!["elements"]?.AsArray();
         Assert.That(arr, Is.Not.Null);

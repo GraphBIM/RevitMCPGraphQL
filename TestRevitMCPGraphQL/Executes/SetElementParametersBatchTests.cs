@@ -10,7 +10,7 @@ public class SetElementParametersBatchTests : BaseGraphQLTest
     public async Task SetElementParametersBatch_Empty_ReturnsFalse()
     {
         const string m = "mutation($inputs:[ElementParametersInput!]!){ setElementParametersBatch(inputs:$inputs) }";
-        var data = await PostGraphQLAsync(m, new { inputs = Array.Empty<object>() });
+        var data = await PostGraphQlAsync(m, new { inputs = Array.Empty<object>() });
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["setElementParametersBatch"]?.GetValue<bool>(), Is.False);
     }

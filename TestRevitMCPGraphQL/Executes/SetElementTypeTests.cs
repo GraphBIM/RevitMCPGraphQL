@@ -10,7 +10,7 @@ public class SetElementTypeTests : BaseGraphQLTest
     public async Task SetElementType_InvalidIds_ReturnsFalse()
     {
         const string m = "mutation($elementId:ID!,$typeId:ID!){ setElementType(elementId:$elementId, typeId:$typeId) }";
-        var data = await PostGraphQLAsync(m, new { elementId = -1, typeId = -1 });
+        var data = await PostGraphQlAsync(m, new { elementId = -1, typeId = -1 });
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["setElementType"]?.GetValue<bool>(), Is.False);
     }

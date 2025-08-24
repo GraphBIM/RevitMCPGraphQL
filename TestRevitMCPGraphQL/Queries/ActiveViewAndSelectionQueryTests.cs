@@ -10,7 +10,7 @@ public class ActiveViewAndSelectionQueryTests : BaseGraphQLTest
     public async Task ActiveView_And_Selection_Works()
     {
         const string q = "query { activeView { id name viewType isTemplate } selection }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["selection"], Is.Not.Null);
         Console.WriteLine(data);

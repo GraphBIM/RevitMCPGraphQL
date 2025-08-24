@@ -10,7 +10,7 @@ public class CoordinatesQueryTests : BaseGraphQLTest
     public async Task Coordinates_Works()
     {
         const string q = "query { coordinates { projectBasePoint { x y z } sharedBasePoint { x y z } allBasePoints { id name isShared x y z } } }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["coordinates"], Is.Not.Null);
         Console.WriteLine(data);

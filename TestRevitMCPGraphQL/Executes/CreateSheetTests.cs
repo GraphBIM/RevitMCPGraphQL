@@ -10,7 +10,7 @@ public class CreateSheetTests : BaseGraphQLTest
     public async Task CreateSheet_InvalidTitleBlock_ReturnsNull()
     {
         const string m = "mutation($tb:ID){ createSheet(titleBlockTypeId:$tb) }";
-        var data = await PostGraphQLAsync(m, new { tb = -1L });
+        var data = await PostGraphQlAsync(m, new { tb = -1L });
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["createSheet"]?.GetValue<string?>(), Is.Null);
     }

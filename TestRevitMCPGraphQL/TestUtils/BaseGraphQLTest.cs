@@ -23,8 +23,7 @@ public abstract class BaseGraphQLTest
         BaseUri = new Uri(baseUrl);
         GraphQlUri = new Uri(BaseUri, path);
 
-    // Configure HttpClient once at type initialization, before any requests
-    Client.Timeout = TimeSpan.FromSeconds(60);
+    // Configure default headers once before any requests occur
     Client.DefaultRequestHeaders.Accept.Clear();
     Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
@@ -48,7 +47,11 @@ public abstract class BaseGraphQLTest
         }
     }
 
-    protected static async Task<JsonNode?> PostGraphQLAsync(string query, object? variables = null)
+    // Back-compat: some tests may call the older name with capital L
+    protected static Task<JsonNode?> PostGraphQLAsync(string query, object? variables = null)
+        => PostGraphQlAsync(query, variables);
+
+    protected static async Task<JsonNode?> PostGraphQlAsync(string query, object? variables = null)
     {
         var payload = new { query, variables };
         var json = JsonSerializer.Serialize(payload);

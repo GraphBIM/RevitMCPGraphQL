@@ -10,7 +10,7 @@ public class ElementTypesQueryTests : BaseGraphQLTest
     public async Task ElementTypes_Works()
     {
         const string q = "query { elementTypes { id name categoryName } }";
-        var data = await PostGraphQLAsync(q);
+        var data = await PostGraphQlAsync(q);
         Assert.That(data, Is.Not.Null);
         Assert.That(data!["elementTypes"], Is.Not.Null);
         Console.WriteLine(data);
