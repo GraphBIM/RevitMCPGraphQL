@@ -13,13 +13,18 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
             .Arguments(new QueryArguments(
                 new QueryArgument<ListGraphType<IdGraphType>> { Name = "ids" },
                 new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." },
-                new QueryArgument<BooleanGraphType> { Name = "isUnit", Description = "If true (default), parameter values include unit symbols; otherwise numeric only.", DefaultValue = true }
+                new QueryArgument<BooleanGraphType> { Name = "isUnit", Description = "If true (default), parameter values include unit symbols; otherwise numeric only.", DefaultValue = true },
+                new QueryArgument<ListGraphType<StringGraphType>> { Name = "parameterNames", Description = "Optional: only include parameters whose names are in this list (case-insensitive)." }
             ))
             .Resolve(ctx =>
             {
                 var ids = ctx.GetArgument<List<int>>("ids") ?? new List<int>();
                 var documentId = ctx.GetArgument<long?>("documentId");
                 var isUnit = ctx.GetArgument<bool>("isUnit", true);
+                var parameterNames = ctx.GetArgument<List<string>>("parameterNames");
+                var includeSet = (parameterNames != null && parameterNames.Count > 0)
+                    ? new HashSet<string>(parameterNames, StringComparer.OrdinalIgnoreCase)
+                    : null;
                 return RevitDispatcher.Invoke(() =>
                 {
                     var doc = DocumentResolver.ResolveDocument(getDoc(), documentId);
@@ -41,7 +46,7 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
                                     Name = e.Name,
                                     Parameters = e.Parameters
                                         .Cast<Parameter>()
-                                        .Where(p => p?.Definition != null)
+                                        .Where(p => p?.Definition != null && (includeSet == null || includeSet.Contains(p.Definition!.Name)))
                                         .Select(p => new ParameterDto { Name = p.Definition!.Name, Value = ParameterValueFormatter.GetValue(p, doc, isUnit) })
                                         .ToList()
                                 });
