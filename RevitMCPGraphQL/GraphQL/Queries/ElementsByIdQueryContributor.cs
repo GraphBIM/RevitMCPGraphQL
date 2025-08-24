@@ -14,6 +14,7 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
                 new QueryArgument<ListGraphType<IdGraphType>> { Name = "ids" },
                 new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." },
                 new QueryArgument<BooleanGraphType> { Name = "isUnit", Description = "If true (default), parameter values include unit symbols; otherwise numeric only.", DefaultValue = true },
+                new QueryArgument<BooleanGraphType> { Name = "isIncludeTypeParams", Description = "If true, also include parameters from the element's type.", DefaultValue = false },
                 new QueryArgument<ListGraphType<StringGraphType>> { Name = "parameterNames", Description = "Optional: only include parameters whose names are in this list (case-insensitive)." }
             ))
             .Resolve(ctx =>
@@ -21,6 +22,7 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
                 var ids = ctx.GetArgument<List<int>>("ids") ?? new List<int>();
                 var documentId = ctx.GetArgument<long?>("documentId");
                 var isUnit = ctx.GetArgument<bool>("isUnit", true);
+                var includeTypeParams = ctx.GetArgument<bool>("isIncludeTypeParams", false);
                 var parameterNames = ctx.GetArgument<List<string>>("parameterNames");
                 var includeSet = (parameterNames != null && parameterNames.Count > 0)
                     ? new HashSet<string>(parameterNames, StringComparer.OrdinalIgnoreCase)
@@ -44,11 +46,7 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
                                     Id = e.Id?.Value ?? 0,
                                     TypeId = e.GetTypeId()?.Value,
                                     Name = e.Name,
-                                    Parameters = e.Parameters
-                                        .Cast<Parameter>()
-                                        .Where(p => p?.Definition != null && (includeSet == null || includeSet.Contains(p.Definition!.Name)))
-                                        .Select(p => new ParameterDto { Name = p.Definition!.Name, Value = ParameterValueFormatter.GetValue(p, doc, isUnit) })
-                                        .ToList()
+                                    Parameters = BuildCombinedParameters(e, doc, isUnit, includeTypeParams, includeSet)
                                 });
                             }
                         }
@@ -57,5 +55,46 @@ internal sealed class ElementsByIdQueryContributor : IQueryContributor
                     return result;
                 });
             });
+    }
+
+    private static List<ParameterDto> BuildCombinedParameters(Element e, Autodesk.Revit.DB.Document doc, bool isUnit, bool includeTypeParams, HashSet<string>? includeSet)
+    {
+        var list = new List<ParameterDto>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var p in e.Parameters.Cast<Parameter>())
+        {
+            if (p?.Definition == null) continue;
+            var name = p.Definition!.Name;
+            if (includeSet != null && !includeSet.Contains(name)) continue;
+            if (seen.Add(name))
+                list.Add(new ParameterDto { Name = name, Value = ParameterValueFormatter.GetValue(p, doc, isUnit) });
+        }
+
+        if (includeTypeParams)
+        {
+            try
+            {
+                var typeId = e.GetTypeId();
+                if (typeId != null)
+                {
+                    var typeElem = doc.GetElement(typeId);
+                    if (typeElem != null)
+                    {
+                        foreach (var p in typeElem.Parameters.Cast<Parameter>())
+                        {
+                            if (p?.Definition == null) continue;
+                            var name = p.Definition!.Name;
+                            if (includeSet != null && !includeSet.Contains(name)) continue;
+                            if (seen.Add(name))
+                                list.Add(new ParameterDto { Name = name, Value = ParameterValueFormatter.GetValue(p, doc, isUnit) });
+                        }
+                    }
+                }
+            }
+            catch { /* ignore type param errors */ }
+        }
+
+        return list;
     }
 }
