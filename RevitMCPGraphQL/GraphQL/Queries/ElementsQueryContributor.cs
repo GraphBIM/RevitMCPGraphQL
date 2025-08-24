@@ -14,6 +14,8 @@ internal sealed class ElementsQueryContributor : IQueryContributor
     query.Field<ListGraphType<ElementType>>("elements")
             .Arguments(new QueryArguments(
                 new QueryArgument<StringGraphType> { Name = "categoryName" },
+                new QueryArgument<StringGraphType> { Name = "familyName", Description = "Optional: filter elements by family name (case-insensitive)." },
+                new QueryArgument<StringGraphType> { Name = "typeName", Description = "Optional: filter elements by type name (case-insensitive)." },
         new QueryArgument<IntGraphType> { Name = "limit" },
                    new QueryArgument<IdGraphType> { Name = "documentId", Description = "Optional: RevitLinkInstance element id. If omitted or invalid, uses the active document." },
                    new QueryArgument<BooleanGraphType> { Name = "isUnit", Description = "If true (default), parameter values include unit symbols; otherwise numeric only.", DefaultValue = true },
@@ -23,6 +25,8 @@ internal sealed class ElementsQueryContributor : IQueryContributor
             .Resolve(context =>
             {
                 var categoryName = context.GetArgument<string>("categoryName");
+                var familyNameArg = context.GetArgument<string>("familyName");
+                var typeNameArg = context.GetArgument<string>("typeName");
                 var limit = context.GetArgument<int?>("limit");
                    var documentId = context.GetArgument<long?>("documentId");
                 var isUnit = context.GetArgument<bool>("isUnit", true);
@@ -50,9 +54,43 @@ internal sealed class ElementsQueryContributor : IQueryContributor
                         }
                     }
 
-                    var list = collector
-                        .ToElements()
-                        .Cast<Element>()
+                    // Materialize elements minimally and apply family/type filters first
+                    var elems = collector.ToElements().Cast<Element>();
+
+                    if (!string.IsNullOrWhiteSpace(familyNameArg) || !string.IsNullOrWhiteSpace(typeNameArg))
+                    {
+                        var famCmp = familyNameArg != null ? familyNameArg.Trim() : null;
+                        var typeCmp = typeNameArg != null ? typeNameArg.Trim() : null;
+                        elems = elems.Where(e =>
+                        {
+                            var tId = e.GetTypeId();
+                            Autodesk.Revit.DB.ElementType? et = (tId != null && tId != ElementId.InvalidElementId)
+                                ? doc.GetElement(tId) as Autodesk.Revit.DB.ElementType
+                                : null;
+
+                            // Type name match
+                            if (!string.IsNullOrWhiteSpace(typeCmp))
+                            {
+                                var tn = et?.Name;
+                                if (!string.Equals(tn, typeCmp, StringComparison.OrdinalIgnoreCase))
+                                    return false;
+                            }
+
+                            // Family name via built-in parameter fallback to type
+                            if (!string.IsNullOrWhiteSpace(famCmp))
+                            {
+                                string? fn = e.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM)?.AsString();
+                                if (string.IsNullOrEmpty(fn) && et != null)
+                                    fn = et.get_Parameter(BuiltInParameter.SYMBOL_FAMILY_NAME_PARAM)?.AsString();
+                                if (!string.Equals(fn, famCmp, StringComparison.OrdinalIgnoreCase))
+                                    return false;
+                            }
+
+                            return true;
+                        });
+                    }
+
+                    var list = elems
                         .Select(e => new ElementDto
                         {
                             Id = e.Id?.Value ?? 0,
