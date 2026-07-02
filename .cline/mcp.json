@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "revit-graphql": {
+      "command": "python",
+      "args": [
+        "c:\\Users\\chuon\\RiderProjects\\RevitMCPGraphQL\\python-mcp\\revit_mcp_server.py"
+      ],
+      "env": {
+        "REVIT_GRAPHQL_URL": "http://localhost:5000/graphql",
+        "REVIT_GRAPHQL_TIMEOUT": "10"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "health",
+        "model_health",
+        "document",
+        "project_info",
+        "categories",
+        "elements",
+        "rooms",
+        "levels",
+        "views",
+        "materials",
+        "families",
+        "sheets",
+        "active_view_and_selection",
+        "server_info"
+      ]
+    }
+  }
+}

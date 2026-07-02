@@ -7,14 +7,14 @@ Exposes a lightweight GraphQL API inside Autodesk Revit for both read and write 
 ## Highlights
 - Runs an in-process HTTP GraphQL server inside Revit
 - Modular query + mutation architecture (contributors)
-- Broad query coverage: document, categories, elements, rooms, levels, views, families/instances, project info, materials, worksets, phases, design options, links, sheets, grids, project location, warnings, element types, units, elements by category, elements in bounding box, active view and selection
-- Practical mutations: set parameters (single/batch), change type, move, rotate, delete, create family instance, duplicate view, create sheet
+- Broad query coverage: document, categories, elements, rooms, levels, views, families/instances, project info, materials, worksets, phases, design options, links, sheets, grids, schedules, project location, warnings, element types, units, coordinates, elements by category, elements in bounding box, active view and selection, element relationships, model health
+- Practical mutations: set parameters (single/batch), change type, move, rotate, delete, create family instance, duplicate view, create sheet, export/import schedules to/from Excel
 - Simple health endpoint and native JSON variables
 - Optional Python MCP client/server for automation and AI tooling
 
 ## Requirements
-- Autodesk Revit 2021–2026 (multi-targeted). Most features validated on 2024/2025.
-- .NET Framework 4.8 for Revit 2021–2024; .NET 8 for 2025+ (handled by csproj configurations)
+- Autodesk Revit 2021–2027 (multi-targeted). Most features validated on 2024/2025.
+- .NET Framework 4.8 for Revit 2021–2024; .NET 8 for Revit 2025–2026; .NET 10 for Revit 2027 (handled by csproj configurations)
 - Windows 10/11
 - Python 3.8+ (only if using the Python client / MCP server)
 
@@ -26,7 +26,7 @@ Exposes a lightweight GraphQL API inside Autodesk Revit for both read and write 
 
 3) Restore and build
     - dotnet restore
-    - Select the Revit configuration matching your version (e.g., “Debug R24” or “Debug R25”) and build
+    - Select the Revit configuration matching your version (e.g., "Debug R24", "Debug R25", "Debug R26", or "Debug R27") and build
 
 4) Deploy
     - The project uses Nice3point.Revit.Build.Tasks to copy the .addin and binaries to your Revit Addins folder on Debug builds automatically
@@ -73,6 +73,10 @@ Variables are supported via the standard { query, variables } payload.
 - elementsInBoundingBox(minX,minY,minZ,maxX,maxY,maxZ, limit)
 - activeViewAndSelection { activeView { id name } selectionIds }
 - units { typeId name symbol }
+- coordinates(documentId): Key coordinate base points for the project
+- schedules(documentId): List of schedules in the document
+- elementRelationship(elementId: ID!, documentId): Get relationships for an element (super component, host, dependents, joined elements)
+- modelHealth(documentId): Quick model health summary (warnings count, element counts, rooms without areas)
 
 ### Mutations (editing)
 - setElementParameter(elementId: ID!, parameterName: String!, value: String!): Boolean
@@ -84,6 +88,8 @@ Variables are supported via the standard { query, variables } payload.
 - createFamilyInstance(symbolId: ID!, location: PointInput!, levelId: ID, structuralType: String): ID
 - duplicateView(viewId: ID!, withDetailing: Boolean): ID
 - createSheet(titleBlockTypeId: ID, sheetNumber: String, sheetName: String): ID
+- exportSchedulesToExcel(filePath: String!, scheduleIds: [ID]): String - Export schedules to Excel, returns output file path
+- importScheduleFromExcel(filePath: String!, scheduleId: ID!): Int - Import parameter values from Excel into schedule elements, returns count of updated elements
 
 Input types
 - PointInput { x: Float!, y: Float!, z: Float! }
@@ -104,8 +110,9 @@ Location: python-mcp/
 Quick start
 ```powershell
 cd python-mcp
-python -m pip install -r requirements.txt
-python mcp_client.py
+py -m pip install -r requirements.txt
+# or: python -m pip install -r requirements.txt
+py mcp_client.py
 ```
 
 Launch MCP server for an MCP-enabled client
@@ -116,23 +123,66 @@ python-mcp\revit_mcp_server.cmd
 If you run the Python file directly:
 ```powershell
 cd python-mcp
-python revit_mcp_server.py
+py revit_mcp_server.py
+# or: python revit_mcp_server.py
 ```
 
-In a VS Code MCP-capable client (settings.json example)
-```jsonc
+VS Code MCP configuration (create .vscode/mcp.json in your workspace)
+```json
 {
-   "mcp.servers": {
-      "revit-mcp-vscode-graphql": {
-         "command": "${workspaceFolder}/python-mcp/revit_mcp_server.cmd",
-         "cwd": "${workspaceFolder}/python-mcp",
-         "env": {
-            "REVIT_GRAPHQL_URL": "http://localhost:5000/graphql"
-         }
+  "servers": {
+    "revit-mcp-graphql": {
+      "command": "py",
+      "args": ["python-mcp/revit_mcp_server.py"],
+      "cwd": "${workspaceFolder}/python-mcp",
+      "env": {
+        "REVIT_GRAPHQL_URL": "http://localhost:5000/graphql"
       }
-   }
+    }
+  }
 }
 ```
+
+**Windows Note:** Use `"command": "py"` (Python launcher) instead of `"command": "python"` to avoid issues with the Windows Store Python alias, which doesn't work properly with stdio-based MCP servers.
+
+Alternative using full path:
+```json
+{
+  "servers": {
+    "revit-mcp-graphql": {
+      "command": "C:\\Users\\YourUsername\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+      "args": ["revit_mcp_server.py"],
+      "cwd": "${workspaceFolder}/python-mcp",
+      "env": {
+        "REVIT_GRAPHQL_URL": "http://localhost:5000/graphql"
+      }
+    }
+  }
+}
+```
+
+For user profile configuration (available in all workspaces), run **MCP: Open User Configuration** in VS Code Command Palette to edit the global mcp.json file.
+
+### Troubleshooting MCP Connection Issues
+
+**Error: MCP error -32000: Connection closed**
+
+This error typically means the MCP server process exits immediately after starting. Common causes:
+
+1. **Windows Store Python alias issue** - The `python` command on Windows may resolve to a Windows Store alias that doesn't work with stdio redirection.
+   - **Fix:** Use `py` (Python launcher) or the full path to python.exe in your MCP configuration
+   - **Check:** Run `where python` in PowerShell. If it shows `C:\Users\...\WindowsApps\python.exe`, you're using the alias
+
+2. **Missing dependencies** - The fastmcp and requests packages aren't installed.
+   - **Fix:** Run `py -m pip install -r requirements.txt` in the python-mcp directory
+   - **Check:** Run `py -c "import mcp; print('OK')"` to verify
+
+3. **Revit GraphQL server not running** - The MCP server needs the Revit GraphQL endpoint to be available.
+   - **Fix:** Start Revit and launch the GraphQL server using the Add-Ins tab
+   - **Check:** Visit http://localhost:5000/health in a browser
+
+4. **Port mismatch** - The MCP server is configured for the wrong port.
+   - **Fix:** Set `REVIT_GRAPHQL_URL` environment variable to match the actual server URL shown in Revit's dialog
 
 ## Project structure
 - RevitMCPGraphQL/

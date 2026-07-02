@@ -8,11 +8,20 @@ REM Resolve script directory (handles spaces)
 set "SCRIPT_DIR=%~dp0"
 pushd "%SCRIPT_DIR%" >NUL 2>&1
 
-if not defined PYTHON set "PYTHON=python"
+REM Try py launcher first (more reliable on Windows), fall back to python
+if not defined PYTHON (
+  where py >NUL 2>&1
+  if not errorlevel 1 (
+    set "PYTHON=py"
+  ) else (
+    set "PYTHON=python"
+  )
+)
+
 where "%PYTHON%" >NUL 2>&1
 if errorlevel 1 (
   echo [ERROR] Python interpreter '%PYTHON%' not found. 1>&2
-  echo         Set the PYTHON environment variable to a valid interpreter path. 1>&2
+  echo         Install Python from python.org or set the PYTHON environment variable. 1>&2
   exit /b 9009
 )
 

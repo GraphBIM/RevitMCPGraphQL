@@ -7,9 +7,9 @@
         <PlatformTarget>x64</PlatformTarget>
         <ImplicitUsings>true</ImplicitUsings>
         <EnableDynamicLoading>true</EnableDynamicLoading>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net10.0-windows</TargetFramework>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        <Configurations>Debug R21;Debug R22;Debug R23;Debug R24;Debug R25;Debug R26;Release R21;Release R22;Release R23;Release R24;Release R25;Release R26</Configurations>
+        <Configurations>Debug R21;Debug R22;Debug R23;Debug R24;Debug R25;Debug R26;Debug R27;Release R21;Release R22;Release R23;Release R24;Release R25;Release R26;Release R27</Configurations>
     </PropertyGroup>
 
     <!-- Revit configuration -->
@@ -37,7 +37,10 @@
         <RevitVersion>2026</RevitVersion>
         <TargetFramework>net8.0-windows</TargetFramework>
     </PropertyGroup>
-
+    <PropertyGroup Condition="$(Configuration.Contains('R27'))">
+        <RevitVersion>2027</RevitVersion>
+        <TargetFramework>net10.0-windows</TargetFramework>
+    </PropertyGroup>
     <!-- Launch configuration -->
     <PropertyGroup>
         <StartAction>Program</StartAction>
