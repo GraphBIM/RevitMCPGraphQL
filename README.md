@@ -4,6 +4,10 @@ Exposes a lightweight GraphQL API inside Autodesk Revit for both read and write 
 
 ![](./docs/Code_jYTcsr1iMW.png)
 
+Demo 
+
+![](./docs/Code_FbfvteDnxI.png)
+
 ## Highlights
 - Runs an in-process HTTP GraphQL server inside Revit
 - Modular query + mutation architecture (contributors)
